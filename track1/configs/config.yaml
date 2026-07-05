@@ -1,0 +1,18 @@
+# config.yaml
+# main configuration file
+
+project:
+  name: "AI City Track 1"
+  version: "1.0"
+
+paths:
+  video: "data/raw/test.mp4"
+  output_dir: "outputs"
+  model_dir: "models"
+
+video:
+  process_fps: 10
+  display: true
+
+logging:
+  level: INFO

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+# *.pyo
+
+# Virtual Environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+desktop.ini
+Thumbs.db
+# .DS_Store
+
+# Logs
+logs/
+*.log
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Dataset
+data/raw/
+data/interim/
+data/processed/
+
+# Model weights
+models/*.pt
+models/*.pth
+models/*.onnx
+
+# Outputs
+outputs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
