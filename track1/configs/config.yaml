@@ -20,3 +20,14 @@ video:
 logging:
   level: INFO
 
+detection:
+  model: "yolo26"
+  weights: "models/yolo26n.pt"
+  confidence_threshold: 0.25
+  iou_threshold: 0.45
+  device: "cuda" # Options: "cpu", "cuda", "mps"
+  classes:
+    - car
+    - bus
+    - truck
+    - motorcycle
