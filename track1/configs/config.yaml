@@ -13,6 +13,10 @@ paths:
 video:
   process_fps: 10
   display: true
+  default_video: "data/raw/sample.mp4"
+  backend: "opencv"          # Future: ffmpeg, gstreamer
+  buffer_size: 1             # Reserved for future streaming support
 
 logging:
   level: INFO
+
