@@ -1,2 +1,4 @@
 pydantic 
 Pyyaml
+cv2
+numpy
