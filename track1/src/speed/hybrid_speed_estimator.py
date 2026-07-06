@@ -1,19 +1,29 @@
-from .base_speed_estimator import BaseSpeedEstimator
+# hybrid_speed_estimator.py
 
-from .homography_speed_estimator import (
-    HomographySpeedEstimator,
-)
+from __future__ import annotations
 
-from .optical_flow_speed_estimator import (
-    OpticalFlowSpeedEstimator,
-)
+from core.config import Config
+from core.schemas import BoundingBox
 
-from .hybrid_speed_estimator import (
-    HybridSpeedEstimator,
-)
+from speed.base_speed_estimator import BaseSpeedEstimator
 
-from .trajectory import TrajectoryManager
 
-from .speed_estimator_factory import (
-    SpeedEstimatorFactory,
-)
+class HybridSpeedEstimator(BaseSpeedEstimator):
+    """
+    Placeholder implementation for a hybrid speed estimator.
+
+    Future versions may combine homography-based estimation with
+    optical flow or other techniques.
+    """
+
+    def __init__(self, config: Config) -> None:
+        self.config = config["speed"]["hybrid"]
+
+    def estimate(
+        self,
+        trajectory: list[BoundingBox],
+    ) -> float:
+        """
+        Placeholder implementation.
+        """
+        return 0.0
