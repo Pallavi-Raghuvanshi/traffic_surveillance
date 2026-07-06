@@ -1,5 +1,5 @@
 # ============================================================================
-# speed_estimator.py
+# HomographySpeedEstimator.py
 # ============================================================================
 # converts pixel movement into real-world speed
 
@@ -14,7 +14,7 @@ from core.schemas import BoundingBox
 from speed.base_speed_estimator import BaseSpeedEstimator
 
 
-class SpeedEstimator(BaseSpeedEstimator):
+class HomographySpeedEstimator(BaseSpeedEstimator):
     """
     Estimates vehicle speed using Homography transformation.
 

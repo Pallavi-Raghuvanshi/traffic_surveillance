@@ -7,7 +7,7 @@ from __future__ import annotations
 from core.config import Config
 
 from speed.base_speed_estimator import BaseSpeedEstimator
-from speed.speed_estimator import SpeedEstimator
+from track1.src.speed.homography_speed_estimator import HomographySpeedEstimator, HomographySpeedEstimator, SpeedEstimator
 
 from calibration.homography import Homography
 
@@ -31,7 +31,7 @@ class SpeedEstimatorFactory:
 
         if algorithm == "homography":
 
-            homography = Homography.load(
+            homography = HomographySpeedEstimator.load(
                 config["paths"]["homography"]
             )
 
