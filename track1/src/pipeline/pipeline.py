@@ -13,38 +13,7 @@ logger = get_logger(__name__)
 
 class Pipeline:
     """
-    Main processing pipeline.
-
-    Coordinates every module of Track 1.
-
-    Workflow
-    --------
-
-    Video
-
-        ↓
-
-    Detection
-
-        ↓
-
-    Tracking
-
-        ↓
-
-    Trajectory
-
-        ↓
-
-    Speed Estimation
-
-        ↓
-
-    Evaluation
-
-        ↓
-
-    Visualization
+    Executes the complete Track 1 processing pipeline.
     """
 
     def __init__(
@@ -58,25 +27,15 @@ class Pipeline:
     ) -> None:
 
         self.video_loader = video_loader
-
         self.detector = detector
-
         self.tracker = tracker
-
         self.trajectory_manager = trajectory_manager
-
         self.speed_estimator = speed_estimator
-
         self.evaluator = evaluator
 
     def run(self) -> None:
-        """
-        Execute complete Track 1 pipeline.
-        """
 
-        logger.info(
-            "Starting Track 1 pipeline..."
-        )
+        logger.info("Pipeline started.")
 
         for frame_number, frame in self.video_loader:
 
@@ -106,15 +65,12 @@ class Pipeline:
                 )
 
                 speed = (
-                    self.speed_estimator
-                    .estimate(
+                    self.speed_estimator.estimate(
                         trajectory
                     )
                 )
 
-                speeds.append(
-                    speed
-                )
+                speeds.append(speed)
 
             elapsed = (
                 time.perf_counter()
@@ -122,13 +78,11 @@ class Pipeline:
             )
 
             self.evaluator.update(
-                len(detections),
-                elapsed,
-                speeds,
+                num_detections=len(detections),
+                processing_time=elapsed,
+                speeds=speeds,
             )
 
-        logger.info(
-            "Pipeline finished."
-        )
+        logger.info("Pipeline finished.")
 
         self.evaluator.print_summary()

@@ -10,10 +10,10 @@ from detection.detector_factory import DetectorFactory
 
 from tracking.tracker_factory import TrackerFactory
 
-from speed.speed_estimator_factory import (
+from speed import (
     SpeedEstimatorFactory,
+    TrajectoryManager,
 )
-from speed.trajectory import TrajectoryManager
 
 from input.video_loader import VideoLoader
 
@@ -23,9 +23,6 @@ from pipeline import Pipeline
 
 
 class ExperimentRunner:
-    """
-    Creates and executes an experiment based on config.yaml.
-    """
 
     def __init__(
         self,
@@ -36,41 +33,21 @@ class ExperimentRunner:
 
     def run(self) -> None:
 
-        # --------------------------------------------------------------
-        # Video
-        # --------------------------------------------------------------
-
         video_loader = VideoLoader(
-            self.config["paths"]["video"]
+            self.config.paths.video
         )
-
-        # --------------------------------------------------------------
-        # Detector
-        # --------------------------------------------------------------
 
         detector = DetectorFactory.create(
             self.config
         )
 
-        # --------------------------------------------------------------
-        # Tracker
-        # --------------------------------------------------------------
-
         tracker = TrackerFactory.create(
             self.config
         )
 
-        # --------------------------------------------------------------
-        # Trajectory Manager
-        # --------------------------------------------------------------
-
         trajectory_manager = (
             TrajectoryManager()
         )
-
-        # --------------------------------------------------------------
-        # Speed Estimator
-        # --------------------------------------------------------------
 
         speed_estimator = (
             SpeedEstimatorFactory.create(
@@ -79,27 +56,21 @@ class ExperimentRunner:
             )
         )
 
-        # --------------------------------------------------------------
-        # Evaluator
-        # --------------------------------------------------------------
-
         evaluator = Evaluator()
 
-        # --------------------------------------------------------------
-        # Pipeline
-        # --------------------------------------------------------------
-
         pipeline = Pipeline(
-            video_loader=video_loader,
-            detector=detector,
-            tracker=tracker,
-            trajectory_manager=trajectory_manager,
-            speed_estimator=speed_estimator,
-            evaluator=evaluator,
-        )
 
-        # --------------------------------------------------------------
-        # Execute
-        # --------------------------------------------------------------
+            video_loader,
+
+            detector,
+
+            tracker,
+
+            trajectory_manager,
+
+            speed_estimator,
+
+            evaluator,
+        )
 
         pipeline.run()

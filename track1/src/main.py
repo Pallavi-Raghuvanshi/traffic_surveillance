@@ -1,12 +1,38 @@
-from src.core.config import Config
+# ============================================================================
+# main.py
+# ============================================================================
 
-config = Config()
+from __future__ import annotations
 
-print(config.project.name)
-print(config.project.version)
+from core.config import Config
 
-print(config.paths.video)
+from core.logger import get_logger
 
-print(config.video.process_fps)
+from experiments import ExperimentRunner
 
-print(config.logging.level)
+
+logger = get_logger(__name__)
+
+
+def main() -> None:
+
+    logger.info(
+        "Traffic Surveillance Started"
+    )
+
+    config = Config()
+
+    runner = ExperimentRunner(
+        config
+    )
+
+    runner.run()
+
+    logger.info(
+        "Traffic Surveillance Finished"
+    )
+
+
+if __name__ == "__main__":
+
+    main()
