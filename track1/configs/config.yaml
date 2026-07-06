@@ -22,9 +22,8 @@ logging:
   level: INFO
 
 detection:
-  algorithm: "yolo"          # yolo | rtdetr | faster_rcnn | mask_rcnn | ssd
-  model: "yolo26"
-  weights: "models/yolo26n.pt"
+  algorithm: "ultralytics"          # ultralytics | faster_rcnn
+  model: "yolo11n.pt"
   confidence: 0.25
   iou: 0.45
   device: "cuda"             # cpu | cuda | mps
