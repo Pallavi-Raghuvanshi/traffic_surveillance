@@ -1,26 +1,14 @@
 # ============================================================================
 # speed_estimator_factory.py
 # ============================================================================
-
 from __future__ import annotations
-
 from calibration.homography import Homography
-
 from core.config import Config
-
 from speed.base_speed_estimator import BaseSpeedEstimator
-
-from speed.homography_speed_estimator import (
-    HomographySpeedEstimator,
-)
-
-from speed.optical_flow_speed_estimator import (
-    OpticalFlowSpeedEstimator,
-)
-
-from speed.hybrid_speed_estimator import (
-    HybridSpeedEstimator,
-)
+from speed.homography_speed_estimator import HomographySpeedEstimator
+from speed.optical_flow_speed_estimator import OpticalFlowSpeedEstimator
+from speed.hybrid_speed_estimator import HybridSpeedEstimator
+from speed.pixel_speed_estimator import PixelSpeedEstimator
 
 
 class SpeedEstimatorFactory:
@@ -36,6 +24,12 @@ class SpeedEstimatorFactory:
             .strip()
             .lower()
         )
+
+        if algorithm == "pixel":
+
+            return PixelSpeedEstimator(
+                fps=fps,
+            )
 
         if algorithm == "homography":
 

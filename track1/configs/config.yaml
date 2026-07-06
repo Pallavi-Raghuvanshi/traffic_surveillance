@@ -6,14 +6,15 @@ project:
   version: "1.0"
 
 paths:
-  dataset: /content/drive/MyDrive/MinorProject/datasets/ai_city_2022  
+  video: "data/raw/sample.avi"
   output_dir: "outputs"
   model_dir: "models"
+  homography: "data/calibration/homography.npy"
 
 video:
   process_fps: 10
   display: true
-  default_video: "data/raw/sample.mp4"
+  default_video: "data/raw/sample.avi"
   backend: "opencv"          # Future: ffmpeg, gstreamer
   buffer_size: 1             # Reserved for future streaming support
 
@@ -24,8 +25,8 @@ detection:
   algorithm: "yolo"          # yolo | rtdetr | faster_rcnn | mask_rcnn | ssd
   model: "yolo26"
   weights: "models/yolo26n.pt"
-  confidence_threshold: 0.25
-  iou_threshold: 0.45
+  confidence: 0.25
+  iou: 0.45
   device: "cuda"             # cpu | cuda | mps
   classes:
     - car
@@ -55,7 +56,10 @@ tracking:
     appearance_thresh: 0.25
 
 speed:
-  algorithm: "homography"
+  algorithm: "pixel"
+
+  pixel:
+    smoothing_window: 5
 
   homography:
     smoothing_window: 5
@@ -67,3 +71,17 @@ speed:
   hybrid:
     homography_weight: 0.7
     optical_flow_weight: 0.3
+
+# speed:                            (after caliberation)
+#   algorithm: "homography"
+
+#   homography:
+#     smoothing_window: 5
+
+#   optical_flow:
+#     window_size: 15
+#     pyramid_levels: 3
+
+#   hybrid:
+#     homography_weight: 0.7
+#     optical_flow_weight: 0.3

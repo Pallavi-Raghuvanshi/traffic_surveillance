@@ -14,6 +14,22 @@ logger = get_logger(__name__)
 class Pipeline:
     """
     Executes the complete Track 1 processing pipeline.
+
+    Workflow
+    --------
+    Video
+        ↓
+    Detection
+        ↓
+    Tracking
+        ↓
+    Trajectory Update
+        ↓
+    Speed Estimation
+        ↓
+    Visualization
+        ↓
+    Evaluation
     """
 
     def __init__(
@@ -35,7 +51,9 @@ class Pipeline:
         self.evaluator = evaluator
         self.visualizer = visualizer
 
-    def run(self) -> None:
+    def run(
+        self,
+    ) -> None:
 
         logger.info("Pipeline started.")
 
@@ -43,20 +61,37 @@ class Pipeline:
 
             start = time.perf_counter()
 
+            # ---------------------------------------------------------
+            # Detection
+            # ---------------------------------------------------------
+
             detections = self.detector.detect(
                 frame
             )
+
+            # ---------------------------------------------------------
+            # Tracking
+            # ---------------------------------------------------------
 
             tracks = self.tracker.update(
                 detections,
                 frame,
             )
 
+            # ---------------------------------------------------------
+            # Trajectory Management
+            # ---------------------------------------------------------
+
             self.trajectory_manager.update(
                 tracks
             )
 
-            speeds = []
+            # ---------------------------------------------------------
+            # Speed Estimation
+            # ---------------------------------------------------------
+
+            speeds: list[float] = []
+            speed_map: dict[int, float] = {}
 
             for track in tracks:
 
@@ -74,19 +109,23 @@ class Pipeline:
 
                 speeds.append(speed)
 
-                speed_map = {
-                    track.track_id: speed
-                    for track, speed in zip(
-                        tracks,
-                        speeds,
-                    )
-                }
+                speed_map[
+                    track.track_id
+                ] = speed
 
-                frame = self.visualizer.draw_tracks(
-                    frame,
-                    tracks,
-                    speed_map,
-                )
+            # ---------------------------------------------------------
+            # Visualization
+            # ---------------------------------------------------------
+
+            frame = self.visualizer.draw_tracks(
+                frame,
+                tracks,
+                speed_map,
+            )
+
+            # ---------------------------------------------------------
+            # Evaluation
+            # ---------------------------------------------------------
 
             elapsed = (
                 time.perf_counter()
@@ -94,7 +133,9 @@ class Pipeline:
             )
 
             self.evaluator.update(
-                num_detections=len(detections),
+                num_detections=len(
+                    detections
+                ),
                 processing_time=elapsed,
                 speeds=speeds,
             )

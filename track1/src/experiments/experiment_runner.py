@@ -21,6 +21,8 @@ from evaluation import Evaluator
 
 from pipeline import Pipeline
 
+from visualization.visualizer import Visualizer
+
 
 class ExperimentRunner:
 
@@ -34,7 +36,7 @@ class ExperimentRunner:
     def run(self) -> None:
 
         video_loader = VideoLoader(
-            self.config.paths.video
+            self.config["paths"]["video"]
         )
 
         detector = DetectorFactory.create(
@@ -58,6 +60,8 @@ class ExperimentRunner:
 
         evaluator = Evaluator()
 
+        visualizer = Visualizer()
+
         pipeline = Pipeline(
 
             video_loader,
@@ -71,6 +75,8 @@ class ExperimentRunner:
             speed_estimator,
 
             evaluator,
+
+            visualizer,
         )
 
         pipeline.run()
