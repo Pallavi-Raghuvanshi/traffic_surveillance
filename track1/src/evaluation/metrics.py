@@ -2,24 +2,20 @@
 # metrics.py
 # ============================================================================
 
-"""
-Future metrics implementation.
+class Metrics:
+    """
+    Utility class for evaluation metrics.
 
-Examples
---------
-MOTA
+    Future implementations:
+    - MOTA
+    - MOTP
+    - IDF1
+    - HOTA
+    - Precision
+    - Recall
+    - mAP
+    - Speed MAE
+    - RMSE
+    """
 
-MOTP
-
-IDF1
-
-Precision
-
-Recall
-
-mAP
-
-Speed MAE
-
-RMSE
-"""
+    pass
