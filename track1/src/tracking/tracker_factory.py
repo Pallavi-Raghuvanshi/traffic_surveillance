@@ -1,8 +1,5 @@
 # ============================================================================
 # tracker_factory.py
-#
-# Description:
-#     Factory class responsible for creating tracker instances.
 # ============================================================================
 
 from __future__ import annotations
@@ -10,31 +7,21 @@ from __future__ import annotations
 from core.config import Config
 
 from tracking.base_tracker import BaseTracker
+
 from tracking.bytetrack_tracker import ByteTrackTracker
+from tracking.deepsort_tracker import DeepSORTTracker
+from tracking.botsort_tracker import BoTSORTTracker
 
 
 class TrackerFactory:
     """
-    Factory responsible for creating tracker objects.
-
-    Supported Trackers
-    ------------------
-    - ByteTrack
-
-    Future
-    ------
-    - DeepSORT
-    - BoT-SORT
-    - OC-SORT
+    Factory responsible for creating trackers.
     """
 
     @staticmethod
     def create(
         config: Config,
     ) -> BaseTracker:
-        """
-        Create tracker from configuration.
-        """
 
         algorithm = (
             config["tracking"]["algorithm"]
@@ -45,6 +32,12 @@ class TrackerFactory:
         if algorithm == "bytetrack":
             return ByteTrackTracker(config)
 
+        if algorithm == "deepsort":
+            return DeepSORTTracker(config)
+
+        if algorithm == "botsort":
+            return BoTSORTTracker(config)
+
         raise ValueError(
-            f"Unsupported tracker: '{algorithm}'"
+            f"Unsupported tracker: {algorithm}"
         )

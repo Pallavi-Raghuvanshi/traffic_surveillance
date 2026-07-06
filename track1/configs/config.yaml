@@ -35,12 +35,24 @@ detection:
 
 tracking:
   algorithm: "bytetrack"
-  track_activation_threshold: 0.25
-  lost_track_buffer: 30
-  minimum_matching_threshold: 0.8
-  minimum_consecutive_frames: 3
+
   frame_rate: 30
-  minimum_box_area: 10
+
+  bytetrack:
+    track_activation_threshold: 0.25
+    lost_track_buffer: 30
+    minimum_matching_threshold: 0.8
+    minimum_consecutive_frames: 3
+    minimum_box_area: 10
+
+  deepsort:
+    max_age: 30
+    nn_budget: 100
+    max_cosine_distance: 0.2
+
+  botsort:
+    proximity_thresh: 0.5
+    appearance_thresh: 0.25
 
 speed:
   algorithm: homography

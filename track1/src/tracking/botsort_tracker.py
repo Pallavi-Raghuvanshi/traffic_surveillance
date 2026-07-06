@@ -1,5 +1,5 @@
 # ============================================================================
-# bytetrack_tracker.py
+# botsort_tracker.py
 # ============================================================================
 
 from __future__ import annotations
@@ -13,9 +13,9 @@ from core.schemas import Track
 from tracking.base_tracker import BaseTracker
 
 
-class ByteTrackTracker(BaseTracker):
+class BoTSORTTracker(BaseTracker):
     """
-    Wrapper for ByteTrack algorithm.
+    Wrapper for BoT-SORT.
     """
 
     def __init__(
@@ -23,14 +23,14 @@ class ByteTrackTracker(BaseTracker):
         config: Config,
     ) -> None:
 
-        tracking_cfg = config["tracking"]["bytetrack"]
+        tracking_cfg = config["tracking"]["botsort"]
 
         self.cfg = tracking_cfg
 
         self._active_tracks: list[Track] = []
 
         # TODO
-        # Initialize ByteTrack
+        # Initialize BoT-SORT
 
     @property
     def active_tracks(
@@ -46,9 +46,6 @@ class ByteTrackTracker(BaseTracker):
     ) -> list[Track]:
 
         # TODO
-        # Convert Detection → ByteTrack input
-        # Run tracker
-        # Convert results → Track
 
         return []
 
