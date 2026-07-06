@@ -4,37 +4,23 @@
 
 from __future__ import annotations
 
-import time
-
-import numpy as np
+from statistics import mean
 
 
 class Evaluator:
     """
-    Collects evaluation statistics for the complete pipeline.
-
-    Metrics
-    -------
-    Detection FPS
-
-    Average Inference Time
-
-    Total Frames
-
-    Total Detections
-
-    Average Speed
+    Collects statistics while processing a video.
     """
 
     def __init__(self) -> None:
 
-        self.total_frames = 0
+        self.frames = 0
 
-        self.total_detections = 0
+        self.processing_times = []
 
-        self.total_processing_time = 0.0
+        self.num_detections = []
 
-        self.speed_measurements: list[float] = []
+        self.speeds = []
 
     def update(
         self,
@@ -43,77 +29,82 @@ class Evaluator:
         speeds: list[float],
     ) -> None:
 
-        self.total_frames += 1
+        self.frames += 1
 
-        self.total_detections += num_detections
-
-        self.total_processing_time += processing_time
-
-        self.speed_measurements.extend(speeds)
-
-    @property
-    def fps(self) -> float:
-
-        if self.total_processing_time == 0:
-            return 0.0
-
-        return self.total_frames / self.total_processing_time
-
-    @property
-    def average_processing_time(self) -> float:
-
-        if self.total_frames == 0:
-            return 0.0
-
-        return self.total_processing_time / self.total_frames
-
-    @property
-    def average_speed(self) -> float:
-
-        if not self.speed_measurements:
-            return 0.0
-
-        return float(
-            np.mean(
-                self.speed_measurements
-            )
+        self.processing_times.append(
+            processing_time
         )
 
-    def summary(self) -> dict:
+        self.num_detections.append(
+            num_detections
+        )
 
-        return {
+        self.speeds.extend(
+            speeds
+        )
 
-            "frames": self.total_frames,
+    @property
+    def average_fps(
+        self,
+    ) -> float:
 
-            "detections": self.total_detections,
+        if not self.processing_times:
+            return 0.0
 
-            "fps": round(self.fps, 2),
+        return 1.0 / mean(
+            self.processing_times
+        )
 
-            "avg_processing_time": round(
-                self.average_processing_time,
-                4,
-            ),
+    @property
+    def average_speed(
+        self,
+    ) -> float:
 
-            "avg_speed": round(
-                self.average_speed,
-                2,
-            ),
-        }
+        if not self.speeds:
+            return 0.0
 
-    def print_summary(self) -> None:
+        return mean(
+            self.speeds
+        )
 
-        summary = self.summary()
+    @property
+    def average_detections(
+        self,
+    ) -> float:
+
+        if not self.num_detections:
+            return 0.0
+
+        return mean(
+            self.num_detections
+        )
+
+    def print_summary(
+        self,
+    ) -> None:
 
         print()
 
-        print("=" * 45)
+        print("=" * 50)
 
-        print("TRACK 1 EVALUATION")
+        print("Evaluation Summary")
 
-        print("=" * 45)
+        print("=" * 50)
 
-        for key, value in summary.items():
+        print(
+            f"Frames Processed : {self.frames}"
+        )
 
-            print(f"{key:25}: {value}")
+        print(
+            f"Average FPS      : {self.average_fps:.2f}"
+        )
 
-        print("=" * 45)
+        print(
+            f"Average Detections : {self.average_detections:.2f}"
+        )
+
+        print(
+            f"Average Speed      : {self.average_speed:.2f} km/h"
+        )
+
+        print("=" * 50)
