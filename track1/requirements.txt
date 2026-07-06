@@ -4,3 +4,5 @@ cv2
 numpy
 supervision>=0.25.0
 lapx>=0.5.11
+ultralytics
+torchvision
