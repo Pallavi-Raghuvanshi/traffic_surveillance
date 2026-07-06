@@ -31,3 +31,12 @@ detection:
     - bus
     - truck
     - motorcycle
+
+tracking:
+  algorithm: "bytetrack"
+  track_activation_threshold: 0.25
+  lost_track_buffer: 30
+  minimum_matching_threshold: 0.8
+  minimum_consecutive_frames: 3
+  frame_rate: 30
+  minimum_box_area: 10

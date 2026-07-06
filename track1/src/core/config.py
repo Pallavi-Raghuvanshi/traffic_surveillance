@@ -1,71 +1,121 @@
+# ============================================================================
 # config.py
+#
+# Description:
+#     Configuration loader for the Traffic Surveillance System.
+# ============================================================================
+
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
 
 import yaml
-from pydantic import BaseModel
 
-
-# -----------------------------
-# Individual configuration sections
-# -----------------------------
-
-class ProjectConfig(BaseModel):
-    name: str
-    version: str
-
-
-class PathsConfig(BaseModel):
-    video: str
-    output_dir: str
-    model_dir: str
-
-
-class VideoConfig(BaseModel):
-    process_fps: int
-    display: bool
-
-
-class LoggingConfig(BaseModel):
-    level: str
-
-
-# -----------------------------
-# Main configuration model
-# -----------------------------
-
-class AppConfig(BaseModel):
-    project: ProjectConfig
-    paths: PathsConfig
-    video: VideoConfig
-    logging: LoggingConfig
-
-
-# -----------------------------
-# Configuration Loader
-# -----------------------------
 
 class Config:
+    """
+    Loads configuration from YAML and provides both
+    dictionary-style and attribute-style access.
 
-    def __init__(self,
-                 config_path: str = "configs/config.yaml"):
+    Examples
+    --------
+    config["tracking"]["frame_rate"]
 
-        config_path = Path(config_path)
+    config["detection"]["weights"]
 
-        if not config_path.exists():
+    config.project["name"]
+    """
+
+    def __init__(
+        self,
+        config_path: str | Path = "configs/config.yaml",
+    ) -> None:
+
+        self._config_path = Path(config_path)
+
+        if not self._config_path.exists():
             raise FileNotFoundError(
-                f"Configuration file not found: {config_path}"
+                f"Configuration file not found: {self._config_path}"
             )
 
-        with config_path.open("r", encoding="utf-8") as file:
-            config_dict = yaml.safe_load(file)
+        with self._config_path.open(
+            "r",
+            encoding="utf-8",
+        ) as file:
 
-        self.settings = AppConfig(**config_dict)
+            self._settings: dict[str, Any] = yaml.safe_load(file)
 
-    def __getattr__(self, item):
-        """
-        Allows:
-            config.video
-            config.paths
-            config.project
-        """
-        return getattr(self.settings, item)
+    # ------------------------------------------------------------------
+    # Dictionary Access
+    # ------------------------------------------------------------------
+
+    def __getitem__(
+        self,
+        key: str,
+    ) -> Any:
+
+        return self._settings[key]
+
+    # ------------------------------------------------------------------
+    # Attribute Access
+    # ------------------------------------------------------------------
+
+    def __getattr__(
+        self,
+        item: str,
+    ) -> Any:
+
+        try:
+            return self._settings[item]
+
+        except KeyError as exc:
+
+            raise AttributeError(
+                f"No configuration section named '{item}'."
+            ) from exc
+
+    # ------------------------------------------------------------------
+    # Utility Methods
+    # ------------------------------------------------------------------
+
+    def get(
+        self,
+        key: str,
+        default: Any = None,
+    ) -> Any:
+
+        return self._settings.get(
+            key,
+            default,
+        )
+
+    @property
+    def settings(
+        self,
+    ) -> dict[str, Any]:
+
+        return self._settings
+
+    @property
+    def path(
+        self,
+    ) -> Path:
+
+        return self._config_path
+
+    def __contains__(
+        self,
+        key: str,
+    ) -> bool:
+
+        return key in self._settings
+
+    def __repr__(
+        self,
+    ) -> str:
+
+        return (
+            f"{self.__class__.__name__}"
+            f"(path='{self._config_path}')"
+        )

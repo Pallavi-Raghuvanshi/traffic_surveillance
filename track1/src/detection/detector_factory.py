@@ -1,6 +1,6 @@
-# factory.py
+# detector_factory.py
 
-from detection.yolo_detector import YOLODetector
+from base_detector.yolo_detector import YOLODetector
 
 
 class DetectorFactory:
