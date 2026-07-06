@@ -6,7 +6,7 @@ project:
   version: "1.0"
 
 paths:
-  video: "data/raw/test.mp4"
+  video: data/calibration/homography.npy
   output_dir: "outputs"
   model_dir: "models"
 
@@ -40,3 +40,6 @@ tracking:
   minimum_consecutive_frames: 3
   frame_rate: 30
   minimum_box_area: 10
+
+speed:
+  algorithm: homography
