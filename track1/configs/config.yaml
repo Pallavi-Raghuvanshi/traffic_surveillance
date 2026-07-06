@@ -55,4 +55,15 @@ tracking:
     appearance_thresh: 0.25
 
 speed:
-  algorithm: homography
+  algorithm: "homography"
+
+  homography:
+    smoothing_window: 5
+
+  optical_flow:
+    window_size: 15
+    pyramid_levels: 3
+
+  hybrid:
+    homography_weight: 0.7
+    optical_flow_weight: 0.3

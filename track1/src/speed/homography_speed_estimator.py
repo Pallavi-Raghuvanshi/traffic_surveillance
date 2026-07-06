@@ -5,8 +5,6 @@
 
 from __future__ import annotations
 
-from typing import Iterable
-
 import cv2
 import numpy as np
 
@@ -102,7 +100,7 @@ class HomographySpeedEstimator(BaseSpeedEstimator):
 
     def estimate(
         self,
-        trajectory: Iterable[BoundingBox],
+        trajectory: list[BoundingBox],
     ) -> float:
         """
         Estimate average speed from trajectory.
