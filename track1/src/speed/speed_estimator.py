@@ -11,9 +11,10 @@ import cv2
 import numpy as np
 
 from core.schemas import BoundingBox
+from speed.base_speed_estimator import BaseSpeedEstimator
 
 
-class SpeedEstimator:
+class SpeedEstimator(BaseSpeedEstimator):
     """
     Estimates vehicle speed using Homography transformation.
 
