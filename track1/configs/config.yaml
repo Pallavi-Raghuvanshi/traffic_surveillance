@@ -21,11 +21,12 @@ logging:
   level: INFO
 
 detection:
+  algorithm: "yolo"          # yolo | rtdetr | faster_rcnn | mask_rcnn | ssd
   model: "yolo26"
   weights: "models/yolo26n.pt"
   confidence_threshold: 0.25
   iou_threshold: 0.45
-  device: "cuda" # Options: "cpu", "cuda", "mps"
+  device: "cuda"             # cpu | cuda | mps
   classes:
     - car
     - bus

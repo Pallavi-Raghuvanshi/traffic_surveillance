@@ -1,36 +1,48 @@
+# ============================================================================
 # detector_factory.py
+# ============================================================================
 
-from base_detector.yolo_detector import YOLODetector
+from __future__ import annotations
+
+from core.config import Config
+
+from detection.base_detector import BaseDetector
+
+from detection.yolo_detector import YOLODetector
+from detection.rtdetr_detector import RTDETRDetector
+from detection.faster_rcnn_detector import (
+    FasterRCNNDetector,
+)
 
 
 class DetectorFactory:
     """
-    Creates detector instances.
-
-    Later this class will support:
-
-    YOLO11
-
-    YOLO26
-
-    FasterRCNN
-
-    RT-DETR
-
-    DINO
+    Factory responsible for creating detector instances.
     """
 
     @staticmethod
-    def create(config):
+    def create(
+        config: Config,
+    ) -> BaseDetector:
 
-        model_name = (
-            config["detection"]["model"]
+        algorithm = (
+            config["detection"]["algorithm"]
+            .strip()
             .lower()
         )
 
-        if model_name.startswith("yolo"):
+        if algorithm == "yolo":
+
             return YOLODetector(config)
 
+        if algorithm == "rtdetr":
+
+            return RTDETRDetector(config)
+
+        if algorithm == "faster_rcnn":
+
+            return FasterRCNNDetector(config)
+
         raise ValueError(
-            f"Unsupported detector: {model_name}"
+            f"Unsupported detector: {algorithm}"
         )

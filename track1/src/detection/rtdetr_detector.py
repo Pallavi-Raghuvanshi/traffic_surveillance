@@ -1,5 +1,5 @@
 # ============================================================================
-# yolo_detector.py
+# rtdetr_detector.py
 # ============================================================================
 
 from __future__ import annotations
@@ -12,16 +12,9 @@ from core.schemas import Detection
 from detection.base_detector import BaseDetector
 
 
-class YOLODetector(BaseDetector):
+class RTDETRDetector(BaseDetector):
     """
-    Wrapper for all YOLO models.
-
-    Supported models
-    ----------------
-    YOLO11
-    YOLO26
-    YOLOv8
-    Future YOLO releases
+    Wrapper for RT-DETR detector.
     """
 
     def __init__(
@@ -33,15 +26,10 @@ class YOLODetector(BaseDetector):
 
         self.model_name = detection_cfg["model"]
 
-        self.confidence = detection_cfg["confidence"]
-
-        self.iou = detection_cfg["iou"]
-
         self.device = detection_cfg["device"]
 
         # TODO:
-        #
-        # self.model = YOLO(self.model_name)
+        # Load RT-DETR model
 
     def detect(
         self,
@@ -49,13 +37,11 @@ class YOLODetector(BaseDetector):
     ) -> list[Detection]:
 
         # TODO
-        #
-        # Run inference
-        #
-        # Convert results to Detection objects
 
         return []
 
-    def reset(self) -> None:
+    def reset(
+        self,
+    ) -> None:
 
         pass
