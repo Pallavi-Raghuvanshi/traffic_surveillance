@@ -6,7 +6,7 @@ project:
   version: "1.0"
 
 paths:
-  video: data/calibration/homography.npy
+  dataset: /content/drive/MyDrive/MinorProject/datasets/ai_city_2022  
   output_dir: "outputs"
   model_dir: "models"
 
