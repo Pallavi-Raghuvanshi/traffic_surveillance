@@ -24,6 +24,7 @@ class Pipeline:
         trajectory_manager,
         speed_estimator,
         evaluator,
+        visualizer,
     ) -> None:
 
         self.video_loader = video_loader
@@ -32,6 +33,7 @@ class Pipeline:
         self.trajectory_manager = trajectory_manager
         self.speed_estimator = speed_estimator
         self.evaluator = evaluator
+        self.visualizer = visualizer
 
     def run(self) -> None:
 
@@ -71,6 +73,20 @@ class Pipeline:
                 )
 
                 speeds.append(speed)
+
+                speed_map = {
+                    track.track_id: speed
+                    for track, speed in zip(
+                        tracks,
+                        speeds,
+                    )
+                }
+
+                frame = self.visualizer.draw_tracks(
+                    frame,
+                    tracks,
+                    speed_map,
+                )
 
             elapsed = (
                 time.perf_counter()
