@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 
 import torch
+from PIL import Image
 
 from torchvision.models.detection import (
     fasterrcnn_resnet50_fpn,
@@ -72,8 +73,10 @@ class FasterRCNNDetector(BaseDetector):
             cv2.COLOR_BGR2RGB,
         )
 
+        image = Image.fromarray(rgb)
+
         image = self.transforms(
-            rgb
+            image
         ).to(self.device)
 
         with torch.no_grad():
@@ -119,9 +122,11 @@ class FasterRCNNDetector(BaseDetector):
 
                     class_id=label,
 
-                    class_name=self.class_names[
-                        label
-                    ],
+                    class_name=(
+                        self.class_names[label]
+                        if label < len(self.class_names)
+                        else str(label)
+                    ),
                 )
             )
 
