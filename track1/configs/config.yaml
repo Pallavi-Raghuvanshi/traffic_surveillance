@@ -90,21 +90,20 @@ speed:
 # ============================================================================
 
 benchmark:
-  benchmark:
 
   detectors:
 
-    - algorithm: ultralytics
-      model: yolo11n.pt
+    algorithm: ultralytics
+    model: yolo11n.pt
 
-    - algorithm: ultralytics
-      model: yolo26n.pt
+    # - algorithm: ultralytics
+    #   model: yolo26n.pt
 
-    - algorithm: rtdetr
-      model: rtdetr-l.pt
+    # - algorithm: rtdetr
+    #   model: rtdetr-l.pt
 
-    - algorithm: faster_rcnn
-      model: fasterrcnn_resnet50_fpn
+    # - algorithm: faster_rcnn
+    #   model: fasterrcnn_resnet50_fpn
   trackers:
     - bytetrack
     - deepsort
