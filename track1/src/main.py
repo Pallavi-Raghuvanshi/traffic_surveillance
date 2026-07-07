@@ -7,9 +7,7 @@ from __future__ import annotations
 from core.config import Config
 from core.logger import get_logger
 
-from evaluation.benchmark_summary import (
-    BenchmarkSummary,
-)
+from evaluation.benchmark_summary import BenchmarkSummary
 
 from experiments import (
     ExperimentRunner,

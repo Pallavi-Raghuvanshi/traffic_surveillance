@@ -1,7 +1,6 @@
 # __init__.py
 
 from .base_speed_estimator import BaseSpeedEstimator
-from .speed_estimator_factory import SpeedEstimatorFactory
 from .trajectory import TrajectoryManager
 
 from .pixel_speed_estimator import PixelSpeedEstimator
