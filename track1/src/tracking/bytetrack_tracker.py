@@ -8,6 +8,7 @@ import numpy as np
 import supervision as sv
 
 from core.config import Config
+from core.schemas import BoundingBox
 from core.schemas import Detection
 from core.schemas import Track
 
@@ -16,7 +17,7 @@ from tracking.base_tracker import BaseTracker
 
 class ByteTrackTracker(BaseTracker):
     """
-    Wrapper for ByteTrack algorithm.
+    Wrapper for Supervision ByteTrack.
     """
 
     def __init__(
@@ -68,78 +69,82 @@ class ByteTrackTracker(BaseTracker):
 
         if not detections:
 
-            self._active_tracks = []
+            self._active_tracks.clear()
 
             return self._active_tracks
 
-        xyxy = np.asarray(
+        sv_detections = sv.Detections(
 
-            [
+            xyxy=np.asarray(
 
                 [
 
-                    detection.bbox.x1,
-                    detection.bbox.y1,
-                    detection.bbox.x2,
-                    detection.bbox.y2,
-                ]
+                    [
 
-                for detection in detections
-            ],
+                        detection.bbox.x1,
+                        detection.bbox.y1,
+                        detection.bbox.x2,
+                        detection.bbox.y2,
+                    ]
 
-            dtype=np.float32,
-        )
+                    for detection in detections
 
-        confidence = np.asarray(
+                ],
 
-            [
+                dtype=np.float32,
+            ),
 
-                detection.confidence
+            confidence=np.asarray(
 
-                for detection in detections
-            ],
+                [
 
-            dtype=np.float32,
-        )
+                    detection.confidence
 
-        class_id = np.asarray(
+                    for detection in detections
 
-            [
+                ],
 
-                detection.class_id
+                dtype=np.float32,
+            ),
 
-                for detection in detections
-            ],
+            class_id=np.asarray(
 
-            dtype=np.int32,
-        )
+                [
 
-        sv_detections = sv.Detections(
+                    detection.class_id
 
-            xyxy=xyxy,
+                    for detection in detections
 
-            confidence=confidence,
+                ],
 
-            class_id=class_id,
+                dtype=np.int32,
+            ),
         )
 
         tracked = self._tracker.update_with_detections(
             sv_detections
         )
 
-        tracks: list[Track] = []
+        tracks: list[
+            Track
+        ] = []
 
-        for i in range(len(tracked.xyxy)):
+        for xyxy, confidence, class_id, tracker_id in zip(
 
-            tracker_id = tracked.tracker_id[i]
+            tracked.xyxy,
+
+            tracked.confidence,
+
+            tracked.class_id,
+
+            tracked.tracker_id,
+        ):
 
             if tracker_id is None:
 
                 continue
 
-            x1, y1, x2, y2 = (
-                tracked.xyxy[i]
-            )
+            x1, y1, x2, y2 = xyxy
 
             tracks.append(
 
@@ -150,23 +155,25 @@ class ByteTrackTracker(BaseTracker):
                     ),
 
                     class_id=int(
-                        tracked.class_id[i]
+                        class_id
                     ),
 
-                    class_name=(
-                        detections[i]
-                        .class_name
+                    class_name=str(
+                        class_id
                     ),
 
                     confidence=float(
-                        tracked.confidence[i]
+                        confidence
                     ),
 
-                    bbox=detections[i].bbox.__class__(
+                    bbox=BoundingBox(
 
                         x1=float(x1),
+
                         y1=float(y1),
+
                         x2=float(x2),
+
                         y2=float(y2),
                     ),
                 )
