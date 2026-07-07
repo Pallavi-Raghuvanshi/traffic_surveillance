@@ -8,6 +8,10 @@ from detection.ultralytics_detector import (
     UltralyticsDetector,
 )
 
+from detection.rtdetr_detector import (
+    RTDETRDetector,
+)
+
 from detection.faster_rcnn_detector import (
     FasterRCNNDetector,
 )
@@ -28,6 +32,11 @@ class DetectorFactory:
 
         if algorithm == "ultralytics":
             return UltralyticsDetector(
+                config
+            )
+
+        if algorithm == "rtdetr":
+            return RTDETRDetector(
                 config
             )
 
