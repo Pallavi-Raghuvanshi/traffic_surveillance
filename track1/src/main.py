@@ -7,7 +7,13 @@ from __future__ import annotations
 from core.config import Config
 from core.logger import get_logger
 
-from experiments import ExperimentRunner
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
+
+from experiments import (
+    ExperimentRunner,
+)
 
 
 logger = get_logger(__name__)
@@ -15,15 +21,14 @@ logger = get_logger(__name__)
 
 def main(
     config: Config | None = None,
-) -> dict | None:
+) -> BenchmarkSummary:
     """
     Project entry point.
 
     Returns
     -------
-    dict | None
-        Benchmark summary when benchmarking is enabled,
-        otherwise None.
+    BenchmarkSummary
+        Summary generated after pipeline execution.
     """
 
     logger.info(
@@ -38,13 +43,13 @@ def main(
         config
     )
 
-    result = runner.run()
+    summary = runner.run()
 
     logger.info(
         "Traffic Surveillance Finished"
     )
 
-    return result
+    return summary
 
 
 if __name__ == "__main__":
