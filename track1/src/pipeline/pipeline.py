@@ -12,8 +12,13 @@ from evaluation.benchmark_summary import (
     BenchmarkSummary,
 )
 
-from evaluation.evaluator import Evaluator
-from evaluation.metrics import Metrics
+from evaluation.evaluator import (
+    Evaluator,
+)
+
+from evaluation.metrics import (
+    Metrics,
+)
 
 
 logger = get_logger(__name__)
@@ -185,9 +190,8 @@ class Pipeline:
             )
 
             # ----------------------------------------------------------
-            # Always write.
-            # Visualizer internally performs a no-op when
-            # no VideoWriter has been configured.
+            # Always safe to call.
+            # Performs no-op when no VideoWriter exists.
             # ----------------------------------------------------------
 
             self.visualizer.write(
@@ -224,8 +228,6 @@ class Pipeline:
         # --------------------------------------------------------------
 
         self.visualizer.close()
-
-        self.video_loader.release()
 
         logger.info(
             "Pipeline finished."

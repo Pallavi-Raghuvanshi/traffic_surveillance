@@ -1,11 +1,14 @@
 # ============================================================================
 # benchmark_detectors.py
+# Section 1 / 3
+# Imports + DetectorBenchmark + run()
 # ============================================================================
 
 from __future__ import annotations
 
 import csv
 from pathlib import Path
+
 from tabulate import tabulate
 
 from core.config import Config
@@ -27,11 +30,13 @@ class DetectorBenchmark:
 
     This class never processes video frames.
 
-    It only:
-        - modifies configuration
-        - calls main(config)
-        - collects BenchmarkSummary
-        - prints rankings
+    Responsibilities
+    ----------------
+    - Modify configuration
+    - Call main(config)
+    - Collect BenchmarkSummary
+    - Export results
+    - Print rankings
     """
 
     def __init__(
@@ -60,21 +65,29 @@ class DetectorBenchmark:
 
         benchmark_cfg["type"] = "detector"
 
-        for detector in benchmark_cfg[
+        for detector_cfg in benchmark_cfg[
             "detectors"
         ]:
 
-            algorithm = detector[
+            algorithm = detector_cfg[
                 "algorithm"
             ]
 
-            model = detector[
+            model = detector_cfg[
                 "model"
             ]
 
-            experiment_name = (
-                Path(model).stem
-            )
+            if model is None:
+
+                experiment_name = (
+                    algorithm
+                )
+
+            else:
+
+                experiment_name = (
+                    Path(model).stem
+                )
 
             print()
 
@@ -130,6 +143,11 @@ class DetectorBenchmark:
             ],
 
             "detector",
+        )
+
+        output_file.parent.mkdir(
+            parents=True,
+            exist_ok=True,
         )
 
         with output_file.open(
@@ -197,7 +215,9 @@ class DetectorBenchmark:
 
         if not self.results:
 
-            print("\nNo benchmark results.")
+            print(
+                "\nNo benchmark results."
+            )
 
             return
 
@@ -215,9 +235,12 @@ class DetectorBenchmark:
             reverse=True,
         )
 
-        table = []
+        table: list[list[str | int]] = []
 
-        for rank, (detector, summary) in enumerate(
+        for rank, (
+            detector,
+            summary,
+        ) in enumerate(
 
             ranking,
 
@@ -248,7 +271,9 @@ class DetectorBenchmark:
 
         print()
 
-        print("DETECTOR BENCHMARK RESULTS\n")
+        print(
+            "DETECTOR BENCHMARK RESULTS\n"
+        )
 
         print(
 
