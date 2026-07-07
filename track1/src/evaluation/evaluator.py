@@ -6,53 +6,88 @@ from __future__ import annotations
 
 from statistics import mean
 
+from core.schemas import Detection
+from core.schemas import Track
+
 
 class Evaluator:
     """
-    Collects statistics while processing a video.
+    Evaluates algorithm performance.
+
+    Responsibilities
+    ----------------
+    - Detection statistics
+    - Tracking statistics
+    - Speed statistics
+
+    Runtime statistics such as FPS and processing time
+    are collected exclusively by Metrics.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+    ) -> None:
 
         self.frames = 0
 
-        self.processing_times = []
+        self.num_detections: list[int] = []
 
-        self.num_detections = []
+        self.num_tracks: list[int] = []
 
-        self.speeds = []
+        self.speeds: list[float] = []
+
+    # ------------------------------------------------------------------ #
+    # Update
+    # ------------------------------------------------------------------ #
 
     def update(
         self,
-        num_detections: int,
-        processing_time: float,
+        *,
+        detections: list[Detection],
+        tracks: list[Track],
         speeds: list[float],
     ) -> None:
 
         self.frames += 1
 
-        self.processing_times.append(
-            processing_time
+        self.num_detections.append(
+            len(detections)
         )
 
-        self.num_detections.append(
-            num_detections
+        self.num_tracks.append(
+            len(tracks)
         )
 
         self.speeds.extend(
             speeds
         )
 
+    # ------------------------------------------------------------------ #
+    # Properties
+    # ------------------------------------------------------------------ #
+
     @property
-    def average_fps(
+    def average_detections(
         self,
     ) -> float:
 
-        if not self.processing_times:
+        if not self.num_detections:
             return 0.0
 
-        return 1.0 / mean(
-            self.processing_times
+        return mean(
+            self.num_detections
+        )
+
+    @property
+    def average_tracks(
+        self,
+    ) -> float:
+
+        if not self.num_tracks:
+            return 0.0
+
+        return mean(
+            self.num_tracks
         )
 
     @property
@@ -67,44 +102,65 @@ class Evaluator:
             self.speeds
         )
 
-    @property
-    def average_detections(
+    # ------------------------------------------------------------------ #
+    # Summary
+    # ------------------------------------------------------------------ #
+
+    def summary(
         self,
-    ) -> float:
+    ) -> dict:
 
-        if not self.num_detections:
-            return 0.0
+        return {
 
-        return mean(
-            self.num_detections
-        )
+            "frames_processed":
+                self.frames,
+
+            "average_detections":
+                self.average_detections,
+
+            "average_tracks":
+                self.average_tracks,
+
+            "average_speed":
+                self.average_speed,
+        }
+
+    # ------------------------------------------------------------------ #
+    # Console
+    # ------------------------------------------------------------------ #
 
     def print_summary(
         self,
     ) -> None:
 
+        summary = self.summary()
+
         print()
 
-        print("=" * 50)
+        print("=" * 60)
 
-        print("Evaluation Summary")
+        print("EVALUATION SUMMARY")
 
-        print("=" * 50)
+        print("=" * 60)
 
         print(
-            f"Frames Processed : {self.frames}"
+            f"Frames              : "
+            f"{summary['frames_processed']}"
         )
 
         print(
-            f"Average FPS      : {self.average_fps:.2f}"
+            f"Average Detections  : "
+            f"{summary['average_detections']:.2f}"
         )
 
         print(
-            f"Average Detections : {self.average_detections:.2f}"
+            f"Average Tracks      : "
+            f"{summary['average_tracks']:.2f}"
         )
 
         print(
-            f"Average Speed      : {self.average_speed:.2f} km/h"
+            f"Average Speed       : "
+            f"{summary['average_speed']:.2f}"
         )
 
-        print("=" * 50)
+        print("=" * 60)
