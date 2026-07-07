@@ -2,19 +2,15 @@
 # benchmark_trackers.py
 # ============================================================================
 
-"""
-Benchmark all configured trackers.
-
-This script does NOT contain any processing loop.
-
-It only updates the configuration and invokes main(config).
-"""
-
 from __future__ import annotations
 
 import csv
 
 from core.config import Config
+
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
 
 from main import main
 
@@ -24,6 +20,17 @@ from utils.file_utils import (
 
 
 class TrackerBenchmark:
+    """
+    Benchmarks all configured trackers.
+
+    This class never processes video frames.
+
+    It only:
+        - modifies configuration
+        - calls main(config)
+        - collects BenchmarkSummary
+        - prints rankings
+    """
 
     def __init__(
         self,
@@ -31,7 +38,9 @@ class TrackerBenchmark:
 
         self.config = Config()
 
-        self.results: list[dict] = []
+        self.results: list[
+            tuple[str, BenchmarkSummary]
+        ] = []
 
     # ------------------------------------------------------------------ #
     # Run
@@ -41,25 +50,33 @@ class TrackerBenchmark:
         self,
     ) -> None:
 
-        benchmark_cfg = self.config["benchmark"]
+        benchmark_cfg = (
+            self.config["benchmark"]
+        )
 
         benchmark_cfg["enabled"] = True
 
         benchmark_cfg["type"] = "tracker"
 
-        detector_cfg = benchmark_cfg["detector"]
+        detector_cfg = (
+            benchmark_cfg["detector"]
+        )
 
         self.config["detection"][
             "algorithm"
-        ] = detector_cfg["algorithm"]
+        ] = detector_cfg[
+            "algorithm"
+        ]
 
         self.config["detection"][
             "model"
-        ] = detector_cfg["model"]
+        ] = detector_cfg[
+            "model"
+        ]
 
-        trackers = benchmark_cfg["trackers"]
-
-        for tracker in trackers:
+        for tracker in benchmark_cfg[
+            "trackers"
+        ]:
 
             print()
 
@@ -79,17 +96,15 @@ class TrackerBenchmark:
                 "experiment_name"
             ] = tracker
 
-            result = main(
+            summary = main(
                 self.config
             )
 
-            if result is None:
-                continue
-
-            result["tracker"] = tracker
-
             self.results.append(
-                result
+                (
+                    tracker,
+                    summary,
+                )
             )
 
         self._save_summary()
@@ -116,13 +131,16 @@ class TrackerBenchmark:
         with output_file.open(
             "w",
             newline="",
+            encoding="utf-8",
         ) as file:
 
-            writer = csv.DictWriter(
+            writer = csv.writer(
+                file
+            )
 
-                file,
+            writer.writerow(
 
-                fieldnames=[
+                [
 
                     "tracker",
 
@@ -137,17 +155,36 @@ class TrackerBenchmark:
                     "average_tracks",
 
                     "average_speed",
-                ],
+                ]
             )
 
-            writer.writeheader()
+            for (
+                tracker,
+                summary,
+            ) in self.results:
 
-            writer.writerows(
-                self.results
-            )
+                writer.writerow(
+
+                    [
+
+                        tracker,
+
+                        summary.frames_processed,
+
+                        summary.average_fps,
+
+                        summary.average_processing_time_ms,
+
+                        summary.average_detections,
+
+                        summary.average_tracks,
+
+                        summary.average_speed,
+                    ]
+                )
 
     # ------------------------------------------------------------------ #
-    # Print Summary
+    # Console Summary
     # ------------------------------------------------------------------ #
 
     def _print_summary(
@@ -166,11 +203,11 @@ class TrackerBenchmark:
 
             self.results,
 
-            key=lambda result: (
+            key=lambda item: (
 
-                result["average_fps"],
+                item[1].average_fps,
 
-                result["average_tracks"],
+                item[1].average_tracks,
             ),
 
             reverse=True,
@@ -203,21 +240,24 @@ class TrackerBenchmark:
 
         print("-" * 90)
 
-        for result in ranking:
+        for (
+            tracker,
+            summary,
+        ) in ranking:
 
             print(
 
-                f"{result['tracker']:<20}"
+                f"{tracker:<20}"
 
-                f"{result['average_fps']:>10.2f}"
+                f"{summary.average_fps:>10.2f}"
 
-                f"{result['average_processing_time_ms']:>14.2f}"
+                f"{summary.average_processing_time_ms:>14.2f}"
 
-                f"{result['average_detections']:>14.2f}"
+                f"{summary.average_detections:>14.2f}"
 
-                f"{result['average_tracks']:>12.2f}"
+                f"{summary.average_tracks:>12.2f}"
 
-                f"{result['average_speed']:>10.2f}"
+                f"{summary.average_speed:>10.2f}"
             )
 
         print("=" * 90)
