@@ -84,3 +84,23 @@ speed:
 #   hybrid:
 #     homography_weight: 0.7
 #     optical_flow_weight: 0.3
+
+# ============================================================================
+# Benchmark Configuration
+# ============================================================================
+
+benchmark:
+  detectors:
+    - yolo11n.pt
+    - yolo26n.pt
+    - rtdetr-l.pt
+    - fasterrcnn_resnet50_fpn
+  trackers:
+    - bytetrack
+    - deepsort
+    - botsort
+  save_video: true
+  save_csv: true
+  save_json: true
+  output_directory: "outputs"
+  display: false
