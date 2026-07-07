@@ -1,33 +1,37 @@
 # ============================================================================
-# HomographySpeedEstimator.py
+# homography_speed_estimator.py
 # ============================================================================
-# converts pixel movement into real-world speed
 
 from __future__ import annotations
+
+from typing import Iterable
 
 import cv2
 import numpy as np
 
 from core.schemas import BoundingBox
-from speed.base_speed_estimator import BaseSpeedEstimator
+
+from speed.base_speed_estimator import (
+    BaseSpeedEstimator,
+)
 
 
 class HomographySpeedEstimator(BaseSpeedEstimator):
     """
-    Estimates vehicle speed using Homography transformation.
+    Estimates object speed in km/h using a homography matrix.
 
     Workflow
     --------
     Bounding Box
-            ↓
-    Bottom-center point
-            ↓
+        ↓
+    Bottom-center
+        ↓
     Homography Projection
-            ↓
+        ↓
     World Coordinates (meters)
-            ↓
-    Distance
-            ↓
+        ↓
+    Distance (meters)
+        ↓
     Speed (km/h)
     """
 
@@ -38,104 +42,137 @@ class HomographySpeedEstimator(BaseSpeedEstimator):
     ) -> None:
 
         if homography.shape != (3, 3):
+
             raise ValueError(
                 "Homography matrix must be 3x3."
             )
 
-        self._H = homography.astype(np.float32)
+        if fps <= 0:
+
+            raise ValueError(
+                "FPS must be greater than zero."
+            )
+
+        self._H = homography.astype(
+            np.float32
+        )
+
         self._fps = fps
 
+    # ------------------------------------------------------------------ #
+    # Helpers
+    # ------------------------------------------------------------------ #
+
     @staticmethod
-    def bottom_center(
+    def _bottom_center(
         bbox: BoundingBox,
     ) -> np.ndarray:
-        """
-        Returns bottom-center of a bounding box. Approximate point where vehicle touches the ground.
-        """
 
-        x = (bbox.x1 + bbox.x2) / 2.0
-        y = bbox.y2
+        return np.asarray(
 
-        return np.array(
-            [[x, y]],
+            (
+
+                (bbox.x1 + bbox.x2) / 2.0,
+
+                bbox.y2,
+            ),
+
             dtype=np.float32,
         )
 
-    def project(
+    def _project(
         self,
         bbox: BoundingBox,
     ) -> np.ndarray:
-        """
-        Project pixel coordinates to ground plane.
-        """
 
-        point = self.bottom_center(
-            bbox,
+        point = self._bottom_center(
+            bbox
         )
 
         world = cv2.perspectiveTransform(
-            point.reshape(-1, 1, 2),
+
+            point.reshape(
+                1,
+                1,
+                2,
+            ),
+
             self._H,
         )
 
-        return world.reshape(2)
+        return world.reshape(
+            2
+        )
 
-    def distance(
+    def _distance(
         self,
-        box1: BoundingBox,
-        box2: BoundingBox,
+        first: BoundingBox,
+        second: BoundingBox,
     ) -> float:
-        """
-        Real-world distance (meters).
-        """
 
-        p1 = self.project(box1)
-        p2 = self.project(box2)
+        p1 = self._project(
+            first
+        )
+
+        p2 = self._project(
+            second
+        )
 
         return float(
+
             np.linalg.norm(
                 p2 - p1
             )
         )
 
+    # ------------------------------------------------------------------ #
+    # Estimate
+    # ------------------------------------------------------------------ #
+
     def estimate(
         self,
-        trajectory: list[BoundingBox],
+        trajectory: Iterable[
+            BoundingBox
+        ],
     ) -> float:
-        """
-        Estimate average speed from trajectory.
 
-        Returns
-        -------
-        Speed in km/h.
-        """
+        points = list(
+            trajectory
+        )
 
-        trajectory = list(trajectory)
+        if len(points) < 2:
 
-        if len(trajectory) < 2:
             return 0.0
 
-        distance = 0.0
+        total_distance = 0.0
 
         for previous, current in zip(
-            trajectory[:-1],
-            trajectory[1:],
+
+            points[:-1],
+
+            points[1:],
         ):
 
-            distance += self.distance(
+            total_distance += self._distance(
+
                 previous,
+
                 current,
             )
 
-        time_seconds = (
-            len(trajectory) - 1
+        elapsed_time = (
+
+            len(points) - 1
+
         ) / self._fps
 
-        if time_seconds <= 0:
+        if elapsed_time <= 0:
+
             return 0.0
 
         speed_mps = (
-            distance / time_seconds
+            total_distance
+            / elapsed_time
         )
 
         return speed_mps * 3.6
