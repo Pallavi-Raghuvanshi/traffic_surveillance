@@ -6,7 +6,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from ultralytics import RTDETR
+
 from core.config import Config
+from core.schemas import BoundingBox
 from core.schemas import Detection
 
 from detection.base_detector import BaseDetector
@@ -14,7 +17,7 @@ from detection.base_detector import BaseDetector
 
 class RTDETRDetector(BaseDetector):
     """
-    Wrapper for RT-DETR detector.
+    RT-DETR detector wrapper.
     """
 
     def __init__(
@@ -24,21 +27,72 @@ class RTDETRDetector(BaseDetector):
 
         detection_cfg = config["detection"]
 
-        self.model_name = detection_cfg["model"]
+        self.model = RTDETR(
+            detection_cfg["model"]
+        )
 
-        self.device = detection_cfg["device"]
+        self.confidence = detection_cfg[
+            "confidence"
+        ]
 
-        # TODO:
-        # Load RT-DETR model
+        self.device = detection_cfg[
+            "device"
+        ]
 
     def detect(
         self,
         frame: np.ndarray,
     ) -> list[Detection]:
 
-        # TODO
+        results = self.model.predict(
 
-        return []
+            source=frame,
+
+            conf=self.confidence,
+
+            device=self.device,
+
+            verbose=False,
+        )
+
+        detections: list[Detection] = []
+
+        for result in results:
+
+            for box in result.boxes:
+
+                x1, y1, x2, y2 = (
+                    box.xyxy[0]
+                    .cpu()
+                    .numpy()
+                )
+
+                detections.append(
+
+                    Detection(
+
+                        bbox=BoundingBox(
+                            x1=float(x1),
+                            y1=float(y1),
+                            x2=float(x2),
+                            y2=float(y2),
+                        ),
+
+                        confidence=float(
+                            box.conf.item()
+                        ),
+
+                        class_id=int(
+                            box.cls.item()
+                        ),
+
+                        class_name=result.names[
+                            int(box.cls.item())
+                        ],
+                    )
+                )
+
+        return detections
 
     def reset(
         self,
