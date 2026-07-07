@@ -107,20 +107,20 @@ benchmark:
 
   detectors:
 
-    - algorithm: ultralytics
-      model: models/yolo11n.pt
+    algorithm: ultralytics
+    model: models/yolo11n.pt
 
-    - algorithm: ultralytics
-      model: models/yolo11s.pt
+    algorithm: ultralytics
+    model: models/yolo11s.pt
 
-    - algorithm: ultralytics
-      model: models/yolo11m.pt
+    algorithm: ultralytics
+    model: models/yolo11m.pt
 
-    - algorithm: rtdetr
-      model: models/rtdetr-l.pt
+    algorithm: rtdetr
+    model: models/rtdetr-l.pt
 
-    - algorithm: faster_rcnn
-      model: null
+    algorithm: faster_rcnn
+    model: null
 
   trackers:
 
