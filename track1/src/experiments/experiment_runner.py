@@ -8,17 +8,52 @@ from core.config import Config
 
 from input.video_loader import VideoLoader
 
-from detection.detector_factory import (
-    DetectorFactory,
-)
-
-from tracking.tracker_factory import (
-    TrackerFactory,
-)
-
 from speed import (
-    SpeedEstimatorFactory,
     TrajectoryManager,
+)
+
+from detection.ultralytics_detector import (
+    UltralyticsDetector,
+)
+
+from detection.rtdetr_detector import (
+    RTDETRDetector,
+)
+
+from detection.faster_rcnn_detector import (
+    FasterRCNNDetector,
+)
+
+from tracking.bytetrack_tracker import (
+    ByteTrackTracker,
+)
+
+from tracking.deepsort_tracker import (
+    DeepSORTTracker,
+)
+
+from tracking.botsort_tracker import (
+    BoTSORTTracker,
+)
+
+from speed.pixel_speed_estimator import (
+    PixelSpeedEstimator,
+)
+
+from speed.homography_speed_estimator import (
+    HomographySpeedEstimator,
+)
+
+from speed.optical_flow_speed_estimator import (
+    OpticalFlowSpeedEstimator,
+)
+
+from speed.hybrid_speed_estimator import (
+    HybridSpeedEstimator,
+)
+
+from calibration.homography import (
+    Homography,
 )
 
 from evaluation.benchmark_summary import (
@@ -93,9 +128,35 @@ class ExperimentRunner:
         # Tracking
         # --------------------------------------------------------------
 
-        tracker = TrackerFactory.create(
-            self.config
+        algorithm = (
+            self.config["tracking"]["algorithm"]
+            .strip()
+            .lower()
         )
+
+        if algorithm == "bytetrack":
+
+            tracker = ByteTrackTracker(
+                self.config
+            )
+
+        elif algorithm == "deepsort":
+
+            tracker = DeepSORTTracker(
+                self.config
+            )
+
+        elif algorithm == "botsort":
+
+            tracker = BoTSORTTracker(
+                self.config
+            )
+
+        else:
+
+            raise ValueError(
+                f"Unsupported tracker: {algorithm}"
+            )
 
         # --------------------------------------------------------------
         # Trajectory
@@ -109,12 +170,54 @@ class ExperimentRunner:
         # Speed Estimator
         # --------------------------------------------------------------
 
-        speed_estimator = (
-            SpeedEstimatorFactory.create(
-                self.config,
-                fps=video_loader.fps,
-            )
+        algorithm = (
+            self.config["speed"]["algorithm"]
+            .strip()
+            .lower()
         )
+
+        if algorithm == "pixel":
+
+            speed_estimator = (
+                PixelSpeedEstimator(
+                    fps=video_loader.fps,
+                )
+            )
+
+        elif algorithm == "homography":
+
+            homography = Homography.load(
+                self.config["paths"]["homography"]
+            )
+
+            speed_estimator = (
+                HomographySpeedEstimator(
+                    homography=homography.matrix,
+                    fps=video_loader.fps,
+                )
+            )
+
+        elif algorithm == "optical_flow":
+
+            speed_estimator = (
+                OpticalFlowSpeedEstimator(
+                    self.config
+                )
+            )
+
+        elif algorithm == "hybrid":
+
+            speed_estimator = (
+                HybridSpeedEstimator(
+                    self.config
+                )
+            )
+
+        else:
+
+            raise ValueError(
+                f"Unsupported speed estimator: {algorithm}"
+            )
 
         # --------------------------------------------------------------
         # Metrics
