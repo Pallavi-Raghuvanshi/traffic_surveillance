@@ -27,16 +27,52 @@ class Config:
     config.project["name"]
     """
 
+    DEFAULT_CONFIG = (
+        Path(__file__).resolve().parents[2]
+        / "configs"
+        / "config.yaml"
+    )
+
     def __init__(
         self,
-        config_path: str | Path = "configs/config.yaml",
+        config_path: str | Path | None = None,
     ) -> None:
 
-        self._config_path = Path(config_path)
+        if config_path is None:
+
+            self._config_path = (
+                self.DEFAULT_CONFIG
+            )
+
+        else:
+
+            config_path = Path(config_path)
+
+            if config_path.is_absolute():
+
+                self._config_path = (
+                    config_path
+                )
+
+            else:
+
+                self._config_path = (
+                    Path(__file__)
+                    .resolve()
+                    .parents[2]
+                    / config_path
+                )
+
+        self._config_path = (
+            self._config_path.resolve()
+        )
 
         if not self._config_path.exists():
+
             raise FileNotFoundError(
-                f"Configuration file not found: {self._config_path}"
+
+                "Configuration file not found:\n"
+                f"{self._config_path}"
             )
 
         with self._config_path.open(
@@ -44,7 +80,10 @@ class Config:
             encoding="utf-8",
         ) as file:
 
-            self._settings: dict[str, Any] = yaml.safe_load(file)
+            self._settings: dict[
+                str,
+                Any,
+            ] = yaml.safe_load(file)
 
     # ------------------------------------------------------------------
     # Dictionary Access
@@ -67,6 +106,7 @@ class Config:
     ) -> Any:
 
         try:
+
             return self._settings[item]
 
         except KeyError as exc:

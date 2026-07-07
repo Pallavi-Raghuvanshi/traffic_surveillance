@@ -1,6 +1,7 @@
 # config.yaml
 # main configuration file
 
+
 project:
   name: "AI City Track 1"
   version: "1.0"
@@ -107,20 +108,17 @@ benchmark:
 
   detectors:
 
-    algorithm: ultralytics
-    model: models/yolo11n.pt
+    - algorithm: ultralytics
+      model: models/yolo11n.pt
 
-    algorithm: ultralytics
-    model: models/yolo11s.pt
+    - algorithm: ultralytics
+      model: models/yolo26n.pt
 
-    algorithm: ultralytics
-    model: models/yolo11m.pt
+    - algorithm: rtdetr
+      model: models/rtdetr-l.pt
 
-    algorithm: rtdetr
-    model: models/rtdetr-l.pt
-
-    algorithm: faster_rcnn
-    model: null
+    - algorithm: faster_rcnn
+      model: null
 
   trackers:
 
