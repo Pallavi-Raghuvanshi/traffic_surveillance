@@ -6,20 +6,40 @@ from __future__ import annotations
 
 from core.config import Config
 
-from detection.detector_factory import DetectorFactory
-from tracking.tracker_factory import TrackerFactory
+from input.video_loader import VideoLoader
+
+from detection.detector_factory import (
+    DetectorFactory,
+)
+
+from tracking.tracker_factory import (
+    TrackerFactory,
+)
 
 from speed import (
     SpeedEstimatorFactory,
     TrajectoryManager,
 )
 
-from input.video_loader import VideoLoader
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
 
-from evaluation import Evaluator
-from evaluation.metrics import Metrics
+from evaluation.metrics import (
+    Metrics,
+)
 
-from visualization.visualizer import Visualizer
+from evaluation.metrics_exporter import (
+    MetricsExporter,
+)
+
+from evaluation.evaluator import (
+    Evaluator,
+)
+
+from visualization.visualizer import (
+    Visualizer,
+)
 
 from pipeline import Pipeline
 
@@ -32,9 +52,10 @@ from utils.file_utils import (
 
 class ExperimentRunner:
     """
-    Creates and executes a complete experiment.
+    Composition Root.
 
-    Normal execution and benchmarking both use the same pipeline.
+    Responsible for creating every object required by the
+    application and wiring dependencies together.
     """
 
     def __init__(
@@ -50,23 +71,43 @@ class ExperimentRunner:
 
     def run(
         self,
-    ) -> dict | None:
+    ) -> BenchmarkSummary:
+
+        # --------------------------------------------------------------
+        # Input
+        # --------------------------------------------------------------
 
         video_loader = VideoLoader(
             self.config["paths"]["video"]
         )
 
+        # --------------------------------------------------------------
+        # Detection
+        # --------------------------------------------------------------
+
         detector = DetectorFactory.create(
             self.config
         )
+
+        # --------------------------------------------------------------
+        # Tracking
+        # --------------------------------------------------------------
 
         tracker = TrackerFactory.create(
             self.config
         )
 
+        # --------------------------------------------------------------
+        # Trajectory
+        # --------------------------------------------------------------
+
         trajectory_manager = (
             TrajectoryManager()
         )
+
+        # --------------------------------------------------------------
+        # Speed Estimator
+        # --------------------------------------------------------------
 
         speed_estimator = (
             SpeedEstimatorFactory.create(
@@ -75,44 +116,48 @@ class ExperimentRunner:
             )
         )
 
-        evaluator = Evaluator()
-
-        benchmark_cfg = self.config["benchmark"]
-
-        benchmark_enabled = benchmark_cfg.get(
-            "enabled",
-            False,
-        )
-
-        benchmark_type = benchmark_cfg.get(
-            "type",
-            None,
-        )
-
-        experiment_name = benchmark_cfg.get(
-            "experiment_name",
-            None,
-        )
-
         # --------------------------------------------------------------
         # Metrics
         # --------------------------------------------------------------
 
         metrics = Metrics()
 
-        if benchmark_enabled:
+        metrics_exporter = (
+            MetricsExporter()
+        )
 
-            metrics.csv_path = csv_output_path(
-                benchmark_cfg["output_directory"],
-                benchmark_type,
-                experiment_name,
-            )
+        # --------------------------------------------------------------
+        # Evaluation
+        # --------------------------------------------------------------
 
-            metrics.json_path = json_output_path(
-                benchmark_cfg["output_directory"],
-                benchmark_type,
-                experiment_name,
+        evaluator = Evaluator()
+
+        # --------------------------------------------------------------
+        # Benchmark Configuration
+        # --------------------------------------------------------------
+
+        benchmark_cfg = (
+            self.config["benchmark"]
+        )
+
+        benchmark_enabled = (
+            benchmark_cfg.get(
+                "enabled",
+                False,
             )
+        )
+
+        benchmark_type = (
+            benchmark_cfg.get(
+                "type"
+            )
+        )
+
+        experiment_name = (
+            benchmark_cfg.get(
+                "experiment_name"
+            )
+        )
 
         # --------------------------------------------------------------
         # Visualizer
@@ -121,13 +166,19 @@ class ExperimentRunner:
         if benchmark_enabled:
 
             visualizer = Visualizer(
+
                 output_video=video_output_path(
-                    benchmark_cfg["output_directory"],
+                    benchmark_cfg[
+                        "output_directory"
+                    ],
                     benchmark_type,
                     experiment_name,
                 ),
+
                 fps=video_loader.fps,
+
                 frame_width=video_loader.width,
+
                 frame_height=video_loader.height,
             )
 
@@ -140,14 +191,51 @@ class ExperimentRunner:
         # --------------------------------------------------------------
 
         pipeline = Pipeline(
+
             video_loader=video_loader,
+
             detector=detector,
+
             tracker=tracker,
+
             trajectory_manager=trajectory_manager,
+
             speed_estimator=speed_estimator,
-            evaluator=evaluator,
-            visualizer=visualizer,
+
             metrics=metrics,
+
+            evaluator=evaluator,
+
+            visualizer=visualizer,
         )
 
-        return pipeline.run()
+        summary = pipeline.run()
+
+        # --------------------------------------------------------------
+        # Export
+        # --------------------------------------------------------------
+
+        if benchmark_enabled:
+
+            metrics_exporter.export(
+
+                summary,
+
+                csv_path=csv_output_path(
+                    benchmark_cfg[
+                        "output_directory"
+                    ],
+                    benchmark_type,
+                    experiment_name,
+                ),
+
+                json_path=json_output_path(
+                    benchmark_cfg[
+                        "output_directory"
+                    ],
+                    benchmark_type,
+                    experiment_name,
+                ),
+            )
+
+        return summary
