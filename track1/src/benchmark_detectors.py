@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+from tabulate import tabulate
 
 from core.config import Config
 
@@ -196,9 +197,7 @@ class DetectorBenchmark:
 
         if not self.results:
 
-            print(
-                "\nNo benchmark results."
-            )
+            print("\nNo benchmark results.")
 
             return
 
@@ -216,54 +215,69 @@ class DetectorBenchmark:
             reverse=True,
         )
 
-        print()
+        table = []
 
-        print("=" * 90)
+        for rank, (detector, summary) in enumerate(
 
-        print(
-            "DETECTOR BENCHMARK SUMMARY"
-        )
+            ranking,
 
-        print("=" * 90)
+            start=1,
+        ):
 
-        print(
+            table.append(
 
-            f"{'Detector':<30}"
+                [
 
-            f"{'FPS':>10}"
+                    rank,
 
-            f"{'Time(ms)':>14}"
+                    detector,
 
-            f"{'Detections':>14}"
+                    summary.frames_processed,
 
-            f"{'Tracks':>12}"
+                    f"{summary.average_fps:.2f}",
 
-            f"{'Speed':>10}"
-        )
+                    f"{summary.average_processing_time_ms:.2f}",
 
-        print("-" * 90)
+                    f"{summary.average_detections:.2f}",
 
-        for (
-            detector,
-            summary,
-        ) in ranking:
+                    f"{summary.average_tracks:.2f}",
 
-            print(
-
-                f"{detector:<30}"
-
-                f"{summary.average_fps:>10.2f}"
-
-                f"{summary.average_processing_time_ms:>14.2f}"
-
-                f"{summary.average_detections:>14.2f}"
-
-                f"{summary.average_tracks:>12.2f}"
-
-                f"{summary.average_speed:>10.2f}"
+                    f"{summary.average_speed:.2f}",
+                ]
             )
 
-        print("=" * 90)
+        print()
+
+        print("DETECTOR BENCHMARK RESULTS\n")
+
+        print(
+
+            tabulate(
+
+                table,
+
+                headers=[
+
+                    "Rank",
+
+                    "Detector",
+
+                    "Frames",
+
+                    "FPS",
+
+                    "Time (ms)",
+
+                    "Detections",
+
+                    "Tracks",
+
+                    "Speed",
+                ],
+
+                tablefmt="fancy_grid",
+            )
+        )
 
 
 # ============================================================================

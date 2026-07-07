@@ -9,6 +9,10 @@ from statistics import mean
 from core.schemas import Detection
 from core.schemas import Track
 
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
+
 
 class Evaluator:
     """
@@ -28,8 +32,6 @@ class Evaluator:
         self,
     ) -> None:
 
-        self.frames = 0
-
         self.num_detections: list[int] = []
 
         self.num_tracks: list[int] = []
@@ -47,8 +49,6 @@ class Evaluator:
         tracks: list[Track],
         speeds: list[float],
     ) -> None:
-
-        self.frames += 1
 
         self.num_detections.append(
             len(detections)
@@ -103,64 +103,50 @@ class Evaluator:
         )
 
     # ------------------------------------------------------------------ #
-    # Summary
-    # ------------------------------------------------------------------ #
-
-    def summary(
-        self,
-    ) -> dict:
-
-        return {
-
-            "frames_processed":
-                self.frames,
-
-            "average_detections":
-                self.average_detections,
-
-            "average_tracks":
-                self.average_tracks,
-
-            "average_speed":
-                self.average_speed,
-        }
-
-    # ------------------------------------------------------------------ #
     # Console
     # ------------------------------------------------------------------ #
 
     def print_summary(
         self,
+        summary: BenchmarkSummary,
     ) -> None:
-
-        summary = self.summary()
 
         print()
 
         print("=" * 60)
 
-        print("EVALUATION SUMMARY")
+        print("Evaluation Summary")
 
         print("=" * 60)
 
         print(
-            f"Frames              : "
-            f"{summary['frames_processed']}"
+            f"Frames Processed        : "
+            f"{summary.frames_processed}"
         )
 
         print(
-            f"Average Detections  : "
-            f"{summary['average_detections']:.2f}"
+            f"Average FPS             : "
+            f"{summary.average_fps:.2f}"
         )
 
         print(
-            f"Average Tracks      : "
-            f"{summary['average_tracks']:.2f}"
+            f"Average Processing Time : "
+            f"{summary.average_processing_time_ms:.2f} ms"
         )
 
         print(
-            f"Average Speed       : "
-            f"{summary['average_speed']:.2f}"
+            f"Average Detections      : "
+            f"{summary.average_detections:.2f}"
+        )
+
+        print(
+            f"Average Tracks          : "
+            f"{summary.average_tracks:.2f}"
+        )
+
+        print(
+            f"Average Speed           : "
+            f"{summary.average_speed:.2f} km/h"
         )
 
         print("=" * 60)

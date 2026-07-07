@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import csv
+from tabulate import tabulate
 
 from core.config import Config
 
@@ -188,79 +189,92 @@ class TrackerBenchmark:
     # ------------------------------------------------------------------ #
 
     def _print_summary(
-        self,
-    ) -> None:
+            self,
+        ) -> None:
 
-        if not self.results:
+            if not self.results:
 
-            print(
-                "\nNo benchmark results."
+                print("\nNo benchmark results.")
+
+                return
+
+            ranking = sorted(
+
+                self.results,
+
+                key=lambda item: (
+
+                    item[1].average_fps,
+
+                    item[1].average_tracks,
+                ),
+
+                reverse=True,
             )
 
-            return
+            table = []
 
-        ranking = sorted(
+            for rank, (tracker, summary) in enumerate(
 
-            self.results,
+                ranking,
 
-            key=lambda item: (
+                start=1,
+            ):
 
-                item[1].average_fps,
+                table.append(
 
-                item[1].average_tracks,
-            ),
+                    [
 
-            reverse=True,
-        )
+                        rank,
 
-        print()
+                        tracker,
 
-        print("=" * 90)
+                        summary.frames_processed,
 
-        print(
-            "TRACKER BENCHMARK SUMMARY"
-        )
+                        f"{summary.average_fps:.2f}",
 
-        print("=" * 90)
+                        f"{summary.average_processing_time_ms:.2f}",
 
-        print(
+                        f"{summary.average_detections:.2f}",
 
-            f"{'Tracker':<20}"
+                        f"{summary.average_tracks:.2f}",
 
-            f"{'FPS':>10}"
+                        f"{summary.average_speed:.2f}",
+                    ]
+                )
 
-            f"{'Time(ms)':>14}"
+            print()
 
-            f"{'Detections':>14}"
-
-            f"{'Tracks':>12}"
-
-            f"{'Speed':>10}"
-        )
-
-        print("-" * 90)
-
-        for (
-            tracker,
-            summary,
-        ) in ranking:
+            print("TRACKER BENCHMARK RESULTS\n")
 
             print(
 
-                f"{tracker:<20}"
+                tabulate(
 
-                f"{summary.average_fps:>10.2f}"
+                    table,
 
-                f"{summary.average_processing_time_ms:>14.2f}"
+                    headers=[
 
-                f"{summary.average_detections:>14.2f}"
+                        "Rank",
 
-                f"{summary.average_tracks:>12.2f}"
+                        "Tracker",
 
-                f"{summary.average_speed:>10.2f}"
+                        "Frames",
+
+                        "FPS",
+
+                        "Time (ms)",
+
+                        "Detections",
+
+                        "Tracks",
+
+                        "Speed",
+                    ],
+
+                    tablefmt="fancy_grid",
+                )
             )
-
-        print("=" * 90)
 
 
 # ============================================================================

@@ -120,9 +120,35 @@ class ExperimentRunner:
         # Detection
         # --------------------------------------------------------------
 
-        detector = DetectorFactory.create(
-            self.config
+        algorithm = (
+            self.config["detection"]["algorithm"]
+            .strip()
+            .lower()
         )
+
+        if algorithm == "ultralytics":
+
+            detector = UltralyticsDetector(
+                self.config
+            )
+
+        elif algorithm == "rtdetr":
+
+            detector = RTDETRDetector(
+                self.config
+            )
+
+        elif algorithm == "faster_rcnn":
+
+            detector = FasterRCNNDetector(
+                self.config
+            )
+
+        else:
+
+            raise ValueError(
+                f"Unsupported detector: {algorithm}"
+            )
 
         # --------------------------------------------------------------
         # Tracking
