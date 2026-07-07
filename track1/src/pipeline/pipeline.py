@@ -1,5 +1,5 @@
 # ============================================================================
-# pipeline.py (Part 1/3)
+# pipeline.py
 # ============================================================================
 
 from __future__ import annotations
@@ -8,6 +8,11 @@ import time
 
 from core.logger import get_logger
 
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
+
+from evaluation.evaluator import Evaluator
 from evaluation.metrics import Metrics
 
 
@@ -18,10 +23,10 @@ class Pipeline:
     """
     Executes the complete Track 1 processing pipeline.
 
-    Workflow
-    --------
-    Video
-        ↓
+    Pipeline owns the ONLY frame-processing loop.
+
+    Responsibilities
+    ----------------
     Detection
         ↓
     Tracking
@@ -33,19 +38,28 @@ class Pipeline:
     Visualization
         ↓
     Metrics
+        ↓
+    Evaluation
+
+    Pipeline is intentionally unaware of:
+
+    - benchmarking
+    - exporting
+    - experiment types
+    - output directories
     """
 
     def __init__(
         self,
+        *,
         video_loader,
         detector,
         tracker,
         trajectory_manager,
         speed_estimator,
-        evaluator,
+        metrics: Metrics,
+        evaluator: Evaluator,
         visualizer,
-        *,
-        benchmark_config: dict | None = None,
     ) -> None:
 
         self.video_loader = video_loader
@@ -54,61 +68,19 @@ class Pipeline:
 
         self.tracker = tracker
 
-        self.trajectory_manager = trajectory_manager
+        self.trajectory_manager = (
+            trajectory_manager
+        )
 
-        self.speed_estimator = speed_estimator
+        self.speed_estimator = (
+            speed_estimator
+        )
+
+        self.metrics = metrics
 
         self.evaluator = evaluator
 
         self.visualizer = visualizer
-
-        self.metrics = Metrics()
-
-        benchmark_config = (
-            benchmark_config
-            if benchmark_config is not None
-            else {}
-        )
-
-        self.benchmark_enabled = (
-            benchmark_config.get(
-                "enabled",
-                False,
-            )
-        )
-
-        self.save_video = (
-            benchmark_config.get(
-                "save_video",
-                False,
-            )
-        )
-
-        self.save_csv = (
-            benchmark_config.get(
-                "save_csv",
-                False,
-            )
-        )
-
-        self.save_json = (
-            benchmark_config.get(
-                "save_json",
-                False,
-            )
-        )
-
-        self.csv_output_path = (
-            benchmark_config.get(
-                "csv_output_path"
-            )
-        )
-
-        self.json_output_path = (
-            benchmark_config.get(
-                "json_output_path"
-            )
-        )
 
     # ------------------------------------------------------------------ #
     # Run
@@ -116,7 +88,7 @@ class Pipeline:
 
     def run(
         self,
-    ) -> dict | None:
+    ) -> BenchmarkSummary:
 
         logger.info(
             "Pipeline started."
@@ -124,7 +96,9 @@ class Pipeline:
 
         for frame_number, frame in self.video_loader:
 
-            start = time.perf_counter()
+            start_time = (
+                time.perf_counter()
+            )
 
             # ----------------------------------------------------------
             # Detection
@@ -185,13 +159,9 @@ class Pipeline:
                     track.track_id
                 ] = speed
 
-            # ----------------------------------------------------------
-            # Visualization
-            # ----------------------------------------------------------
-
             processing_time = (
                 time.perf_counter()
-                - start
+                - start_time
             )
 
             fps = (
@@ -199,6 +169,10 @@ class Pipeline:
                 if processing_time > 0
                 else 0.0
             )
+
+            # ----------------------------------------------------------
+            # Visualization
+            # ----------------------------------------------------------
 
             annotated_frame = (
                 self.visualizer.draw_tracks(
@@ -210,32 +184,21 @@ class Pipeline:
                 )
             )
 
-            if (
-                self.benchmark_enabled
-                and self.save_video
-            ):
-                self.visualizer.write(
-                    annotated_frame
-                )
-
-                            # ----------------------------------------------------------
-            # Evaluation
+            # ----------------------------------------------------------
+            # Always write.
+            # Visualizer internally performs a no-op when
+            # no VideoWriter has been configured.
             # ----------------------------------------------------------
 
-            self.evaluator.update(
-                num_detections=len(
-                    detections
-                ),
-                processing_time=processing_time,
-                speeds=speeds,
+            self.visualizer.write(
+                annotated_frame
             )
 
             # ----------------------------------------------------------
-            # Metrics
+            # Runtime Metrics
             # ----------------------------------------------------------
 
             self.metrics.update(
-                frame_number=frame_number,
                 processing_time=processing_time,
                 num_detections=len(
                     detections
@@ -246,40 +209,26 @@ class Pipeline:
                 speeds=speeds,
             )
 
-            # --------------------------------------------------------------
-            # Pipeline Finished
-            # --------------------------------------------------------------
+            # ----------------------------------------------------------
+            # Algorithm Evaluation
+            # ----------------------------------------------------------
 
-            logger.info(
-                "Pipeline finished."
+            self.evaluator.update(
+                detections=detections,
+                tracks=tracks,
+                speeds=speeds,
             )
 
-            self.evaluator.print_summary()
+        # --------------------------------------------------------------
+        # Cleanup
+        # --------------------------------------------------------------
 
-            summary = (
-                self.metrics.summary()
-            )
+        self.visualizer.close()
 
-            if self.benchmark_enabled:
+        self.video_loader.release()
 
-                if (
-                    self.save_csv
-                    and self.csv_output_path
-                ):
-                    self.metrics.save_csv(
-                        self.csv_output_path
-                    )
+        logger.info(
+            "Pipeline finished."
+        )
 
-                if (
-                    self.save_json
-                    and self.json_output_path
-                ):
-                    self.metrics.save_json(
-                        self.json_output_path
-                    )
-
-                self.visualizer.close()
-
-                return summary
-
-            return None
+        return self.metrics.summary()
