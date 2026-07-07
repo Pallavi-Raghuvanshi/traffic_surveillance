@@ -17,7 +17,7 @@ from tracking.base_tracker import BaseTracker
 
 class ByteTrackTracker(BaseTracker):
     """
-    Wrapper for Supervision ByteTrack.
+    Wrapper around Supervision ByteTrack.
     """
 
     def __init__(
@@ -61,6 +61,10 @@ class ByteTrackTracker(BaseTracker):
 
         return self._active_tracks
 
+    # ------------------------------------------------------------------ #
+    # Update
+    # ------------------------------------------------------------------ #
+
     def update(
         self,
         detections: list[Detection],
@@ -72,6 +76,13 @@ class ByteTrackTracker(BaseTracker):
             self._active_tracks.clear()
 
             return self._active_tracks
+
+        class_lookup = {
+
+            detection.class_id: detection.class_name
+
+            for detection in detections
+        }
 
         sv_detections = sv.Detections(
 
@@ -129,7 +140,20 @@ class ByteTrackTracker(BaseTracker):
             Track
         ] = []
 
-        for xyxy, confidence, class_id, tracker_id in zip(
+        tracker_ids = tracked.tracker_id
+
+        if tracker_ids is None:
+
+            self._active_tracks = tracks
+
+            return tracks
+
+        for (
+            xyxy,
+            confidence,
+            class_id,
+            tracker_id,
+        ) in zip(
 
             tracked.xyxy,
 
@@ -137,14 +161,12 @@ class ByteTrackTracker(BaseTracker):
 
             tracked.class_id,
 
-            tracked.tracker_id,
+            tracker_ids,
         ):
 
             if tracker_id is None:
 
                 continue
-
-            x1, y1, x2, y2 = xyxy
 
             tracks.append(
 
@@ -154,27 +176,30 @@ class ByteTrackTracker(BaseTracker):
                         tracker_id
                     ),
 
-                    class_id=int(
-                        class_id
-                    ),
+                    bbox=BoundingBox(
 
-                    class_name=str(
-                        class_id
+                        x1=float(xyxy[0]),
+
+                        y1=float(xyxy[1]),
+
+                        x2=float(xyxy[2]),
+
+                        y2=float(xyxy[3]),
                     ),
 
                     confidence=float(
                         confidence
                     ),
 
-                    bbox=BoundingBox(
+                    class_id=int(
+                        class_id
+                    ),
 
-                        x1=float(x1),
+                    class_name=class_lookup.get(
 
-                        y1=float(y1),
+                        int(class_id),
 
-                        x2=float(x2),
-
-                        y2=float(y2),
+                        str(class_id),
                     ),
                 )
             )
@@ -183,6 +208,10 @@ class ByteTrackTracker(BaseTracker):
 
         return self._active_tracks
 
+    # ------------------------------------------------------------------ #
+    # Reset
+    # ------------------------------------------------------------------ #
+
     def reset(
         self,
     ) -> None:
@@ -190,3 +219,4 @@ class ByteTrackTracker(BaseTracker):
         self._tracker.reset()
 
         self._active_tracks.clear()
+        
