@@ -11,6 +11,7 @@ from deep_sort_realtime.deepsort_tracker import (
 )
 
 from core.config import Config
+from core.schemas import BoundingBox
 from core.schemas import Detection
 from core.schemas import Track
 
@@ -19,7 +20,7 @@ from tracking.base_tracker import BaseTracker
 
 class DeepSORTTracker(BaseTracker):
     """
-    Wrapper for DeepSORT.
+    Wrapper around DeepSORT.
     """
 
     def __init__(
@@ -63,6 +64,10 @@ class DeepSORTTracker(BaseTracker):
 
         return self._active_tracks
 
+    # ------------------------------------------------------------------ #
+    # Update
+    # ------------------------------------------------------------------ #
+
     def update(
         self,
         detections: list[Detection],
@@ -71,7 +76,7 @@ class DeepSORTTracker(BaseTracker):
 
         if not detections:
 
-            self._active_tracks = []
+            self._active_tracks.clear()
 
             return self._active_tracks
 
@@ -80,6 +85,13 @@ class DeepSORTTracker(BaseTracker):
             raise ValueError(
                 "DeepSORT requires the current frame."
             )
+
+        class_lookup = {
+
+            detection.class_name: detection
+
+            for detection in detections
+        }
 
         ds_detections = []
 
@@ -105,71 +117,100 @@ class DeepSORTTracker(BaseTracker):
                 )
             )
 
-        tracked = self._tracker.update_tracks(
-
-            ds_detections,
-
-            frame=frame,
+        tracked_objects = (
+            self._tracker.update_tracks(
+                ds_detections,
+                frame=frame,
+            )
         )
 
-        tracks: list[Track] = []
+        tracks: list[
+            Track
+        ] = []
 
-        for track in tracked:
+        for tracked in tracked_objects:
 
-            if not track.is_confirmed():
+            if not tracked.is_confirmed():
 
                 continue
 
-            ltrb = track.to_ltrb()
+            if tracked.time_since_update > 0:
 
-            class_name = getattr(
-                track,
-                "det_class",
-                "vehicle",
+                continue
+
+            x1, y1, x2, y2 = (
+                tracked.to_ltrb()
             )
 
-            class_id = 0
+            class_name = getattr(
 
-            for detection in detections:
+                tracked,
 
-                if (
-                    detection.class_name
-                    == class_name
-                ):
+                "det_class",
 
-                    class_id = (
-                        detection.class_id
-                    )
+                "unknown",
+            )
 
-                    break
+            detection = class_lookup.get(
+                class_name
+            )
+
+            class_id = (
+
+                detection.class_id
+
+                if detection is not None
+
+                else -1
+            )
+
+            confidence = (
+
+                detection.confidence
+
+                if detection is not None
+
+                else 1.0
+            )
 
             tracks.append(
 
                 Track(
 
                     track_id=int(
-                        track.track_id
+                        tracked.track_id
                     ),
 
-                    class_id=class_id,
+                    bbox=BoundingBox(
+
+                        x1=float(x1),
+
+                        y1=float(y1),
+
+                        x2=float(x2),
+
+                        y2=float(y2),
+                    ),
+
+                    confidence=float(
+                        confidence
+                    ),
+
+                    class_id=int(
+                        class_id
+                    ),
 
                     class_name=class_name,
-
-                    confidence=1.0,
-
-                    bbox=detections[0].bbox.__class__(
-
-                        x1=float(ltrb[0]),
-                        y1=float(ltrb[1]),
-                        x2=float(ltrb[2]),
-                        y2=float(ltrb[3]),
-                    ),
                 )
             )
 
         self._active_tracks = tracks
 
         return self._active_tracks
+
+    # ------------------------------------------------------------------ #
+    # Reset
+    # ------------------------------------------------------------------ #
 
     def reset(
         self,
