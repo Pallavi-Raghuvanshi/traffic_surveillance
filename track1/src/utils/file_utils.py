@@ -7,21 +7,15 @@ from __future__ import annotations
 from pathlib import Path
 
 
+# -----------------------------------------------------------------------------
+# Directories
+# -----------------------------------------------------------------------------
+
 def ensure_directory(
     path: str | Path,
 ) -> Path:
     """
-    Create a directory if it does not exist.
-
-    Parameters
-    ----------
-    path : str | Path
-        Directory path.
-
-    Returns
-    -------
-    Path
-        Path object to the created/existing directory.
+    Create a directory if it does not already exist.
     """
 
     directory = Path(path)
@@ -34,38 +28,66 @@ def ensure_directory(
     return directory
 
 
-def experiment_directory(
+def benchmark_directory(
     output_root: str | Path,
-    experiment_name: str,
+    benchmark_type: str,
 ) -> Path:
     """
-    Create an experiment output directory.
-
     Example
     -------
     outputs/
         detector_benchmark/
-            yolo11/
+
+    outputs/
+        tracker_benchmark/
     """
 
     return ensure_directory(
         Path(output_root)
-        / "detector_benchmark"
+        / f"{benchmark_type}_benchmark"
+    )
+
+
+def experiment_directory(
+    output_root: str | Path,
+    benchmark_type: str,
+    experiment_name: str,
+) -> Path:
+    """
+    Example
+    -------
+    outputs/
+        detector_benchmark/
+            yolo11n/
+
+    outputs/
+        tracker_benchmark/
+            bytetrack/
+    """
+
+    return ensure_directory(
+        benchmark_directory(
+            output_root,
+            benchmark_type,
+        )
         / experiment_name
     )
 
 
+# -----------------------------------------------------------------------------
+# Experiment Files
+# -----------------------------------------------------------------------------
+
 def video_output_path(
     output_root: str | Path,
+    benchmark_type: str,
     experiment_name: str,
 ) -> Path:
-    """
-    Output annotated video path.
-    """
 
     return (
         experiment_directory(
             output_root,
+            benchmark_type,
             experiment_name,
         )
         / "annotated.mp4"
@@ -74,49 +96,55 @@ def video_output_path(
 
 def csv_output_path(
     output_root: str | Path,
+    benchmark_type: str,
     experiment_name: str,
 ) -> Path:
-    """
-    Output detection csv path.
-    """
 
     return (
         experiment_directory(
             output_root,
+            benchmark_type,
             experiment_name,
         )
-        / "detections.csv"
+        / "metrics.csv"
     )
 
 
 def json_output_path(
     output_root: str | Path,
+    benchmark_type: str,
     experiment_name: str,
 ) -> Path:
-    """
-    Output metrics json path.
-    """
 
     return (
         experiment_directory(
             output_root,
+            benchmark_type,
             experiment_name,
         )
         / "metrics.json"
     )
 
 
+# -----------------------------------------------------------------------------
+# Overall Benchmark Result
+# -----------------------------------------------------------------------------
+
 def benchmark_csv_path(
     output_root: str | Path,
+    benchmark_type: str,
 ) -> Path:
-    """
-    Overall benchmark results.
-    """
+
+    filename = (
+        "detector_results.csv"
+        if benchmark_type == "detector"
+        else "tracker_results.csv"
+    )
 
     return (
-        ensure_directory(
-            Path(output_root)
-            / "detector_benchmark"
+        benchmark_directory(
+            output_root,
+            benchmark_type,
         )
-        / "detector_results.csv"
+        / filename
     )

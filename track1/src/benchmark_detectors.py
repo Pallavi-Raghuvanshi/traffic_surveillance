@@ -1,52 +1,47 @@
 # ============================================================================
 # benchmark_detectors.py
 # ============================================================================
+
 """
-Benchmark all configured detectors on the same input video.
+Benchmark all configured detectors.
+
+This script DOES NOT execute any processing loop.
+
+It simply modifies the configuration and invokes main(config).
 
 Outputs
 -------
 outputs/
     detector_benchmark/
-        detector_name/
+        detector_results.csv
+
+        yolo11n/
             annotated.mp4
-            detections.csv
+            metrics.csv
             metrics.json
 
-    detector_results.csv
+        rtdetr/
+            ...
+
+        faster_rcnn/
+            ...
 """
 
 from __future__ import annotations
 
 import csv
-import time
 from pathlib import Path
 
 from core.config import Config
 
-from detection import DetectorFactory
-
-from evaluation.detector_metrics import DetectorMetrics
-
-from input import VideoLoader
-
-from visualization.benchmark_visualizer import (
-    BenchmarkVisualizer,
-)
+from main import main
 
 from utils.file_utils import (
     benchmark_csv_path,
-    csv_output_path,
-    experiment_directory,
-    json_output_path,
-    video_output_path,
 )
 
 
 class DetectorBenchmark:
-    """
-    Benchmarks every detector listed in config.yaml.
-    """
 
     def __init__(
         self,
@@ -56,26 +51,43 @@ class DetectorBenchmark:
 
         self.results: list[dict] = []
 
+    # ------------------------------------------------------------------ #
+    # Run
+    # ------------------------------------------------------------------ #
+
     def run(
         self,
     ) -> None:
 
-        detectors = self.config[
-            "benchmark"
-        ][
-            "detectors"
-        ]
+        benchmark_cfg = self.config["benchmark"]
 
-        for detector_cfg in detectors:
+        benchmark_cfg["enabled"] = True
 
-            algorithm = detector_cfg["algorithm"]
-            model = detector_cfg["model"]
+        benchmark_cfg["type"] = "detector"
 
-            print("\n" + "=" * 60)
-            print(
-                f"Benchmarking : {algorithm} ({model})"
+        detectors = benchmark_cfg["detectors"]
+
+        for detector in detectors:
+
+            algorithm = detector["algorithm"]
+
+            model = detector["model"]
+
+            experiment_name = (
+                Path(model).stem
             )
-            print("=" * 60)
+
+            print()
+
+            print("=" * 70)
+
+            print(
+                f"Benchmarking : "
+                f"{algorithm} "
+                f"({experiment_name})"
+            )
+
+            print("=" * 70)
 
             self.config["detection"][
                 "algorithm"
@@ -85,172 +97,44 @@ class DetectorBenchmark:
                 "model"
             ] = model
 
-            self._run_detector(
-                detector_cfg
+            benchmark_cfg[
+                "experiment_name"
+            ] = experiment_name
+
+            result = main(
+                self.config
+            )
+
+            if result is None:
+                continue
+
+            result["detector"] = (
+                experiment_name
+            )
+
+            self.results.append(
+                result
             )
 
         self._save_summary()
 
         self._print_summary()
 
-    def _run_detector(
-        self,
-        detector_cfg: dict,
-    ) -> None:
-
-        algorithm = detector_cfg[
-            "algorithm"
-        ]
-
-        detector_name = detector_cfg[
-            "model"
-        ]
-
-        detector = DetectorFactory.create(
-            self.config
-        )
-
-        video_loader = VideoLoader(
-            self.config["paths"]["video"]
-        )
-
-        metrics = DetectorMetrics()
-
-        experiment_name = (
-            f"{algorithm}_"
-            f"{Path(detector_name).stem}"
-        )
-
-        experiment_directory(
-
-            self.config["benchmark"][
-                "output_directory"
-            ],
-
-            experiment_name,
-        )
-
-        visualizer = BenchmarkVisualizer(
-
-            output_video=video_output_path(
-
-                self.config["benchmark"][
-                    "output_directory"
-                ],
-
-                experiment_name,
-            ),
-
-            fps=video_loader.fps,
-
-            frame_width=video_loader.width,
-
-            frame_height=video_loader.height,
-
-            detector_name=experiment_name,
-        )
-
-        # ---------------------------------------------------------
-        # Benchmark Loop
-        # ---------------------------------------------------------
-
-        for frame_number, frame in video_loader:
-
-            start = time.perf_counter()
-
-            detections = detector.detect(
-                frame
-            )
-
-            inference_time = (
-                time.perf_counter()
-                - start
-            )
-
-            metrics.update(
-
-                frame_number=frame_number,
-
-                inference_time=inference_time,
-
-                detections=detections,
-            )
-
-            annotated = visualizer.draw(
-
-                frame=frame,
-
-                detections=detections,
-
-                fps=metrics.average_fps,
-
-                frame_number=frame_number,
-            )
-
-            if self.config["benchmark"][
-                "save_video"
-            ]:
-
-                visualizer.write(
-                    annotated
-                )
-
-        visualizer.close()
-
-        if self.config["benchmark"][
-            "save_csv"
-        ]:
-
-            metrics.save_csv(
-
-                csv_output_path(
-
-                    self.config["benchmark"][
-                        "output_directory"
-                    ],
-
-                    experiment_name,
-                )
-            )
-
-        if self.config["benchmark"][
-            "save_json"
-        ]:
-
-            metrics.save_json(
-
-                json_output_path(
-
-                    self.config["benchmark"][
-                        "output_directory"
-                    ],
-
-                    experiment_name,
-                )
-            )
-
-        summary = metrics.summary()
-
-        summary[
-            "detector"
-        ] = experiment_name
-
-        self.results.append(
-            summary
-        )
+    # ------------------------------------------------------------------ #
+    # Save Summary
+    # ------------------------------------------------------------------ #
 
     def _save_summary(
         self,
     ) -> None:
-        """
-        Save detector benchmark summary.
-        """
 
         output_file = benchmark_csv_path(
 
             self.config["benchmark"][
                 "output_directory"
-            ]
+            ],
+
+            "detector",
         )
 
         with output_file.open(
@@ -270,9 +154,13 @@ class DetectorBenchmark:
 
                     "average_fps",
 
+                    "average_processing_time_ms",
+
                     "average_detections",
 
-                    "average_inference_time_ms",
+                    "average_tracks",
+
+                    "average_speed",
                 ],
             )
 
@@ -282,12 +170,13 @@ class DetectorBenchmark:
                 self.results
             )
 
+    # ------------------------------------------------------------------ #
+    # Console Summary
+    # ------------------------------------------------------------------ #
+
     def _print_summary(
         self,
     ) -> None:
-        """
-        Print detector benchmark summary.
-        """
 
         if not self.results:
 
@@ -303,9 +192,7 @@ class DetectorBenchmark:
 
             key=lambda result: (
 
-                result[
-                    "average_fps"
-                ],
+                result["average_fps"],
 
                 result[
                     "average_detections"
@@ -317,45 +204,56 @@ class DetectorBenchmark:
 
         print()
 
-        print("=" * 80)
+        print("=" * 90)
 
         print(
             "DETECTOR BENCHMARK SUMMARY"
         )
 
-        print("=" * 80)
+        print("=" * 90)
 
         print(
-            f"{'Detector':<35}"
+
+            f"{'Detector':<30}"
+
             f"{'FPS':>10}"
-            f"{'Detections':>15}"
-            f"{'Inference(ms)':>18}"
+
+            f"{'Time(ms)':>14}"
+
+            f"{'Detections':>14}"
+
+            f"{'Tracks':>12}"
+
+            f"{'Speed':>10}"
         )
 
-        print("-" * 80)
+        print("-" * 90)
 
         for result in ranking:
 
             print(
 
-                f"{result['detector']:<35}"
+                f"{result['detector']:<30}"
 
                 f"{result['average_fps']:>10.2f}"
 
-                f"{result['average_detections']:>15.2f}"
+                f"{result['average_processing_time_ms']:>14.2f}"
 
-                f"{result['average_inference_time_ms']:>18.2f}"
+                f"{result['average_detections']:>14.2f}"
 
+                f"{result['average_tracks']:>12.2f}"
+
+                f"{result['average_speed']:>10.2f}"
             )
 
-        print("=" * 80)
+        print("=" * 90)
 
 
 # ============================================================================
 # Entry Point
 # ============================================================================
 
-def main() -> None:
+def main_detector_benchmark() -> None:
 
     benchmark = DetectorBenchmark()
 
@@ -364,4 +262,4 @@ def main() -> None:
 
 if __name__ == "__main__":
 
-    main()
+    main_detector_benchmark()

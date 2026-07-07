@@ -1,3 +1,5 @@
+# __init__.py
+
 from .base_detector import BaseDetector
 from .detector_factory import DetectorFactory
 

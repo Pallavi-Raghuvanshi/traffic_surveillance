@@ -91,25 +91,55 @@ speed:
 
 benchmark:
 
+  # ------------------------------------------------------------
+  # Master Switch
+  # ------------------------------------------------------------
+
+  enabled: false
+  # detector | tracker
+  type: null
+  # Filled automatically by benchmark scripts.
+  experiment_name: null
+
+  # ------------------------------------------------------------
+  # Detector Benchmark
+  # ------------------------------------------------------------
+
   detectors:
+
+    - algorithm: ultralytics
+      model: yolo11n.pt
+
+    - algorithm: ultralytics
+      model: yolo26n.pt
+
+    - algorithm: rtdetr
+      model: rtdetr-l.pt
+
+    - algorithm: faster_rcnn
+      model: fasterrcnn_resnet50_fpn
+
+  # ------------------------------------------------------------
+  # Tracker Benchmark
+  # ------------------------------------------------------------
+
+  detector:
 
     algorithm: ultralytics
     model: yolo11n.pt
 
-    # - algorithm: ultralytics
-    #   model: yolo26n.pt
-
-    # - algorithm: rtdetr
-    #   model: rtdetr-l.pt
-
-    # - algorithm: faster_rcnn
-    #   model: fasterrcnn_resnet50_fpn
   trackers:
+
     - bytetrack
     - deepsort
     - botsort
+
+  # ------------------------------------------------------------
+  # Output
+  # ------------------------------------------------------------
+
+  output_directory: outputs
   save_video: true
   save_csv: true
   save_json: true
-  output_directory: "outputs"
   display: false

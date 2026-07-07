@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 from core.config import Config
-
 from core.logger import get_logger
 
 from experiments import ExperimentRunner
@@ -14,23 +13,38 @@ from experiments import ExperimentRunner
 logger = get_logger(__name__)
 
 
-def main() -> None:
+def main(
+    config: Config | None = None,
+) -> dict | None:
+    """
+    Project entry point.
+
+    Returns
+    -------
+    dict | None
+        Benchmark summary when benchmarking is enabled,
+        otherwise None.
+    """
 
     logger.info(
         "Traffic Surveillance Started"
     )
 
-    config = Config()
+    if config is None:
+
+        config = Config()
 
     runner = ExperimentRunner(
         config
     )
 
-    runner.run()
+    result = runner.run()
 
     logger.info(
         "Traffic Surveillance Finished"
     )
+
+    return result
 
 
 if __name__ == "__main__":

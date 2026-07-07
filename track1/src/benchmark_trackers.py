@@ -1,61 +1,29 @@
 # ============================================================================
 # benchmark_trackers.py
 # ============================================================================
+
 """
-Benchmark all configured trackers using a fixed detector.
+Benchmark all configured trackers.
 
-Outputs
--------
-outputs/
+This script does NOT contain any processing loop.
 
-    tracker_benchmark/
-
-        tracker_name/
-
-            annotated.mp4
-
-            metrics.json
-
-            tracks.csv
-
-    tracker_results.csv
+It only updates the configuration and invokes main(config).
 """
 
 from __future__ import annotations
 
 import csv
-import time
-from pathlib import Path
 
 from core.config import Config
 
-from detection import DetectorFactory
-
-from tracking import TrackerFactory
-
-from evaluation.metrics import (
-    Metrics,
-)
-
-from input import VideoLoader
-
-from visualization.visualizer import (
-    Visualizer,
-)
+from main import main
 
 from utils.file_utils import (
     benchmark_csv_path,
-    csv_output_path,
-    experiment_directory,
-    json_output_path,
-    video_output_path,
 )
 
 
 class TrackerBenchmark:
-    """
-    Benchmarks every tracker listed in config.yaml.
-    """
 
     def __init__(
         self,
@@ -65,191 +33,84 @@ class TrackerBenchmark:
 
         self.results: list[dict] = []
 
+    # ------------------------------------------------------------------ #
+    # Run
+    # ------------------------------------------------------------------ #
+
     def run(
         self,
     ) -> None:
 
-        detector_cfg = self.config[
-            "benchmark"
-        ][
-            "detectors"
-        ]
+        benchmark_cfg = self.config["benchmark"]
+
+        benchmark_cfg["enabled"] = True
+
+        benchmark_cfg["type"] = "tracker"
+
+        detector_cfg = benchmark_cfg["detector"]
 
         self.config["detection"][
             "algorithm"
-        ] = detector_cfg[
-            "algorithm"
-        ]
+        ] = detector_cfg["algorithm"]
 
         self.config["detection"][
             "model"
-        ] = detector_cfg[
-            "model"
-        ]
+        ] = detector_cfg["model"]
 
-        trackers = self.config[
-            "benchmark"
-        ][
-            "trackers"
-        ]
+        trackers = benchmark_cfg["trackers"]
 
-        for tracker_name in trackers:
+        for tracker in trackers:
+
+            print()
+
+            print("=" * 70)
 
             print(
-                "\n"
-                + "=" * 60
+                f"Benchmarking : {tracker}"
             )
 
-            print(
-                f"Benchmarking : {tracker_name}"
-            )
-
-            print(
-                "=" * 60
-            )
+            print("=" * 70)
 
             self.config["tracking"][
                 "algorithm"
-            ] = tracker_name
+            ] = tracker
 
-            self._run_tracker(
-                tracker_name
+            benchmark_cfg[
+                "experiment_name"
+            ] = tracker
+
+            result = main(
+                self.config
+            )
+
+            if result is None:
+                continue
+
+            result["tracker"] = tracker
+
+            self.results.append(
+                result
             )
 
         self._save_summary()
 
         self._print_summary()
 
-    def _run_tracker(
-        self,
-        tracker_name: str,
-    ) -> None:
+    # ------------------------------------------------------------------ #
+    # Save Summary
+    # ------------------------------------------------------------------ #
 
-        detector = DetectorFactory.create(
-            self.config
-        )
-
-        tracker = TrackerFactory.create(
-            self.config
-        )
-
-        video_loader = VideoLoader(
-            self.config["paths"]["video"]
-        )
-
-        metrics = Metrics()
-
-        experiment_name = tracker_name
-
-        experiment_directory(
-
-            self.config["benchmark"][
-                "output_directory"
-            ],
-
-            experiment_name,
-        )
-
-        visualizer = Visualizer()
-
-        # ---------------------------------------------------------
-        # Benchmark Loop
-        # ---------------------------------------------------------
-
-        for frame_number, frame in video_loader:
-
-            start = time.perf_counter()
-
-            detections = detector.detect(
-                frame
-            )
-
-            tracks = tracker.update(
-
-                detections,
-
-                frame,
-            )
-
-            elapsed = (
-                time.perf_counter()
-                - start
-            )
-
-            metrics.update(
-
-                frame_number=frame_number,
-
-                processing_time=elapsed,
-
-                tracks=tracks,
-            )
-
-            aspeed_map = {
-                track.track_id: 0.0
-                for track in tracks
-            }
-
-            annotated = visualizer.draw_tracks(
-                frame=frame,
-                tracks=tracks,
-                speeds=speed_map,
-            )           
-
-        if self.config["benchmark"][
-            "save_csv"
-        ]:
-
-            metrics.save_csv(
-
-                csv_output_path(
-
-                    self.config["benchmark"][
-                        "output_directory"
-                    ],
-
-                    experiment_name,
-                )
-            )
-
-        if self.config["benchmark"][
-            "save_json"
-        ]:
-
-            metrics.save_json(
-
-                json_output_path(
-
-                    self.config["benchmark"][
-                        "output_directory"
-                    ],
-
-                    experiment_name,
-                )
-            )
-
-        summary = metrics.summary()
-
-        summary[
-            "tracker"
-        ] = experiment_name
-
-        self.results.append(
-            summary
-        )
-    
     def _save_summary(
         self,
     ) -> None:
-        """
-        Save tracker benchmark summary.
-        """
 
         output_file = benchmark_csv_path(
 
             self.config["benchmark"][
                 "output_directory"
-            ]
+            ],
+
+            "tracker",
         )
 
         with output_file.open(
@@ -269,9 +130,13 @@ class TrackerBenchmark:
 
                     "average_fps",
 
+                    "average_processing_time_ms",
+
+                    "average_detections",
+
                     "average_tracks",
 
-                    "average_processing_time_ms",
+                    "average_speed",
                 ],
             )
 
@@ -281,12 +146,13 @@ class TrackerBenchmark:
                 self.results
             )
 
+    # ------------------------------------------------------------------ #
+    # Print Summary
+    # ------------------------------------------------------------------ #
+
     def _print_summary(
         self,
     ) -> None:
-        """
-        Print tracker benchmark summary.
-        """
 
         if not self.results:
 
@@ -302,13 +168,9 @@ class TrackerBenchmark:
 
             key=lambda result: (
 
-                result[
-                    "average_fps"
-                ],
+                result["average_fps"],
 
-                result[
-                    "average_tracks"
-                ],
+                result["average_tracks"],
             ),
 
             reverse=True,
@@ -316,44 +178,56 @@ class TrackerBenchmark:
 
         print()
 
-        print("=" * 80)
+        print("=" * 90)
 
         print(
             "TRACKER BENCHMARK SUMMARY"
         )
 
-        print("=" * 80)
+        print("=" * 90)
 
         print(
-            f"{'Tracker':<25}"
+
+            f"{'Tracker':<20}"
+
             f"{'FPS':>10}"
-            f"{'Tracks':>15}"
-            f"{'Processing(ms)':>20}"
+
+            f"{'Time(ms)':>14}"
+
+            f"{'Detections':>14}"
+
+            f"{'Tracks':>12}"
+
+            f"{'Speed':>10}"
         )
 
-        print("-" * 80)
+        print("-" * 90)
 
         for result in ranking:
 
             print(
 
-                f"{result['tracker']:<25}"
+                f"{result['tracker']:<20}"
 
                 f"{result['average_fps']:>10.2f}"
 
-                f"{result['average_tracks']:>15.2f}"
+                f"{result['average_processing_time_ms']:>14.2f}"
 
-                f"{result['average_processing_time_ms']:>20.2f}"
+                f"{result['average_detections']:>14.2f}"
 
+                f"{result['average_tracks']:>12.2f}"
+
+                f"{result['average_speed']:>10.2f}"
             )
 
-        print("=" * 80)
+        print("=" * 90)
+
 
 # ============================================================================
 # Entry Point
 # ============================================================================
 
-def main() -> None:
+def main_tracker_benchmark() -> None:
 
     benchmark = TrackerBenchmark()
 
@@ -362,4 +236,4 @@ def main() -> None:
 
 if __name__ == "__main__":
 
-    main()
+    main_tracker_benchmark()

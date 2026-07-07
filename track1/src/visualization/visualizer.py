@@ -7,30 +7,73 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
+from pathlib import Path
+
 from core.schemas import Track
 
 
 class Visualizer:
     """
-    Draws detections, tracks and speeds onto video frames.
+    Draws tracking results and optionally writes annotated video.
     """
 
     def __init__(
         self,
+        *,
         show_labels: bool = True,
         show_speed: bool = True,
         show_track_id: bool = True,
+        output_video: str | Path | None = None,
+        fps: float | None = None,
+        frame_width: int | None = None,
+        frame_height: int | None = None,
     ) -> None:
 
         self.show_labels = show_labels
         self.show_speed = show_speed
         self.show_track_id = show_track_id
 
+        self.video_writer: cv2.VideoWriter | None = None
+
+        if output_video is not None:
+
+            if (
+                fps is None
+                or frame_width is None
+                or frame_height is None
+            ):
+                raise ValueError(
+                    "fps, frame_width and frame_height "
+                    "must be provided when output_video "
+                    "is specified."
+                )
+
+            fourcc = cv2.VideoWriter_fourcc(
+                *"mp4v"
+            )
+
+            self.video_writer = cv2.VideoWriter(
+                str(output_video),
+                fourcc,
+                fps,
+                (
+                    frame_width,
+                    frame_height,
+                ),
+            )
+
+    # ------------------------------------------------------------------ #
+    # Drawing
+    # ------------------------------------------------------------------ #
+
     def draw_tracks(
         self,
         frame: np.ndarray,
         tracks: list[Track],
         speeds: dict[int, float],
+        *,
+        fps: float | None = None,
+        frame_number: int | None = None,
     ) -> np.ndarray:
 
         output = frame.copy()
@@ -50,7 +93,7 @@ class Visualizer:
                 2,
             )
 
-            text = []
+            text: list[str] = []
 
             if self.show_track_id:
                 text.append(
@@ -74,20 +117,63 @@ class Visualizer:
                 )
 
             cv2.putText(
-
                 output,
-
                 " | ".join(text),
-
                 (x1, y1 - 10),
-
                 cv2.FONT_HERSHEY_SIMPLEX,
-
                 0.5,
-
                 (0, 255, 0),
+                2,
+            )
 
+        if fps is not None:
+
+            cv2.putText(
+                output,
+                f"FPS : {fps:.2f}",
+                (20, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0, 255, 255),
+                2,
+            )
+
+        if frame_number is not None:
+
+            cv2.putText(
+                output,
+                f"Frame : {frame_number}",
+                (20, 65),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (255, 255, 0),
                 2,
             )
 
         return output
+
+    # ------------------------------------------------------------------ #
+    # Video Writing
+    # ------------------------------------------------------------------ #
+
+    def write(
+        self,
+        frame: np.ndarray,
+    ) -> None:
+
+        if self.video_writer is None:
+            return
+
+        self.video_writer.write(frame)
+
+    # ------------------------------------------------------------------ #
+    # Cleanup
+    # ------------------------------------------------------------------ #
+
+    def close(self) -> None:
+
+        if self.video_writer is not None:
+
+            self.video_writer.release()
+
+            self.video_writer = None
