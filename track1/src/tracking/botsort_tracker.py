@@ -4,8 +4,6 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 import numpy as np
 
 from ultralytics.trackers.bot_sort import (
@@ -18,6 +16,9 @@ from core.schemas import Detection
 from core.schemas import Track
 
 from tracking.base_tracker import BaseTracker
+from tracking.botsort.config import (
+    build_botsort_args,
+)
 from tracking.ultralytics_results_adapter import (
     TrackingResults,
 )
@@ -33,77 +34,14 @@ class BoTSORTTracker(BaseTracker):
         config: Config,
     ) -> None:
 
-        tracking_cfg = config[
+        self.cfg = config[
             "tracking"
         ][
             "botsort"
         ]
 
-        self.cfg = tracking_cfg
-
-        args = SimpleNamespace(
-
-            # ----------------------------------------------------------
-            # Detection thresholds
-            # ----------------------------------------------------------
-
-            track_high_thresh=tracking_cfg[
-                "track_high_thresh"
-            ],
-
-            track_low_thresh=tracking_cfg[
-                "track_low_thresh"
-            ],
-
-            new_track_thresh=tracking_cfg[
-                "new_track_thresh"
-            ],
-
-            # ----------------------------------------------------------
-            # Association
-            # ----------------------------------------------------------
-
-            match_thresh=tracking_cfg[
-                "match_thresh"
-            ],
-
-            track_buffer=tracking_cfg[
-                "track_buffer"
-            ],
-
-            fuse_score=tracking_cfg[
-                "fuse_score"
-            ],
-
-            # ----------------------------------------------------------
-            # BoT-SORT
-            # ----------------------------------------------------------
-
-            proximity_thresh=tracking_cfg[
-                "proximity_thresh"
-            ],
-
-            appearance_thresh=tracking_cfg[
-                "appearance_thresh"
-            ],
-
-            with_reid=tracking_cfg[
-                "with_reid"
-            ],
-
-            gmc_method=tracking_cfg[
-                "gmc_method"
-            ],
-
-            model=tracking_cfg[
-                "model"
-            ],
-
-            # ----------------------------------------------------------
-            # Optional
-            # ----------------------------------------------------------
-
-            device=None,
+        args = build_botsort_args(
+            config
         )
 
         self._tracker = BOTSORT(

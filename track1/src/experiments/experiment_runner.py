@@ -375,31 +375,4 @@ class ExperimentRunner:
 
         return summary
 
-        # --------------------------------------------------------------
-        # Export
-        # --------------------------------------------------------------
-
-        if benchmark_enabled:
-
-            metrics_exporter.export(
-
-                summary,
-
-                csv_path=csv_output_path(
-                    benchmark_cfg[
-                        "output_directory"
-                    ],
-                    benchmark_type,
-                    experiment_name,
-                ),
-
-                json_path=json_output_path(
-                    benchmark_cfg[
-                        "output_directory"
-                    ],
-                    benchmark_type,
-                    experiment_name,
-                ),
-            )
-
         return summary

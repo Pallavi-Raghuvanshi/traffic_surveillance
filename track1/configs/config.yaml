@@ -84,6 +84,8 @@ tracking:
 
     minimum_matching_threshold: 0.80
 
+    frame_rate: 10
+
   deepsort:
 
     max_age: 30
@@ -159,6 +161,10 @@ benchmark:
   experiment_name: null
 
   output_directory: outputs
+
+  detector:
+    algorithm: ultralytics
+    model: models/yolo11n.pt
 
   detectors:
 

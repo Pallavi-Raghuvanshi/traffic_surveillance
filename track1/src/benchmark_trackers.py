@@ -19,12 +19,6 @@ from utils.file_utils import (
     benchmark_csv_path,
 )
 
-from evaluation.metrics import Metrics
-
-import inspect
-
-print(inspect.getfile(Metrics))
-print(dir(Metrics))
 
 class TrackerBenchmark:
     """

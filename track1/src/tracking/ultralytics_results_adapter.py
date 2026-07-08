@@ -55,6 +55,55 @@ class TrackingResults:
         )
 
     # ------------------------------------------------------------------ #
+    # Ultralytics Tracker Requirements
+    # ------------------------------------------------------------------ #
+
+    @property
+    def xywh(
+        self,
+    ) -> np.ndarray:
+        """
+        Bounding boxes in (center x, center y, width, height) format.
+
+        Required by ``ultralytics.trackers.utils.stracks.parse_bboxes``,
+        which every Ultralytics tracker (BYTETracker, BOTSORT) uses to
+        initialize tracks.
+        """
+
+        if len(self.xyxy) == 0:
+
+            return np.empty(
+                (0, 4),
+                dtype=np.float32,
+            )
+
+        x1 = self.xyxy[:, 0]
+        y1 = self.xyxy[:, 1]
+        x2 = self.xyxy[:, 2]
+        y2 = self.xyxy[:, 3]
+
+        width = x2 - x1
+        height = y2 - y1
+
+        return np.stack(
+
+            [
+
+                x1 + width / 2,
+
+                y1 + height / 2,
+
+                width,
+
+                height,
+
+            ],
+
+            axis=-1,
+
+        ).astype(np.float32)
+
+    # ------------------------------------------------------------------ #
     # Container Protocol
     # ------------------------------------------------------------------ #
 
