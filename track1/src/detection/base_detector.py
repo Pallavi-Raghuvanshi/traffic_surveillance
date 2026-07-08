@@ -1,4 +1,6 @@
+# ============================================================================
 # base_detector.py
+# ============================================================================
 
 from __future__ import annotations
 
@@ -12,11 +14,10 @@ from core.schemas import Detection
 
 class BaseDetector(ABC):
     """
-    Abstract base class for every object detector.
+    Abstract interface for all object detectors.
 
-    Any detector implementation
-    (YOLO, FasterRCNN, RT-DETR...)
-    must inherit this class.
+    Every detector implementation must convert its native
+    output into a list of Detection objects.
     """
 
     @abstractmethod
@@ -25,15 +26,29 @@ class BaseDetector(ABC):
         frame: np.ndarray,
     ) -> list[Detection]:
         """
-        Detect objects from an image.
+        Detect objects in a single image.
 
         Parameters
         ----------
         frame
+            Input image in BGR format.
 
         Returns
         -------
-        List[Detection]
+        list[Detection]
+            Standardized detection results.
         """
 
         raise NotImplementedError
+
+    def reset(
+        self,
+    ) -> None:
+        """
+        Reset detector state.
+
+        Most detectors are stateless, so the default
+        implementation performs no action.
+        """
+
+        return
