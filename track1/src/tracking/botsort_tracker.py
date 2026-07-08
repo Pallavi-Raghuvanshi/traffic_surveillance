@@ -6,16 +6,27 @@ from __future__ import annotations
 
 import numpy as np
 
+from ultralytics.trackers.bot_sort import (
+    BOTSORT,
+)
+
 from core.config import Config
+from core.schemas import BoundingBox
 from core.schemas import Detection
 from core.schemas import Track
 
 from tracking.base_tracker import BaseTracker
+from tracking.botsort.config import (
+    build_botsort_args,
+)
+from tracking.ultralytics_results_adapter import (
+    TrackingResults,
+)
 
 
 class BoTSORTTracker(BaseTracker):
     """
-    Wrapper for BoT-SORT.
+    Wrapper around the official Ultralytics BoT-SORT implementation.
     """
 
     def __init__(
@@ -23,14 +34,27 @@ class BoTSORTTracker(BaseTracker):
         config: Config,
     ) -> None:
 
-        tracking_cfg = config["tracking"]["botsort"]
+        self.cfg = config[
+            "tracking"
+        ][
+            "botsort"
+        ]
 
-        self.cfg = tracking_cfg
+        args = build_botsort_args(
+            config
+        )
 
-        self._active_tracks: list[Track] = []
+        self._tracker = BOTSORT(
+            args
+        )
 
-        # TODO
-        # Initialize BoT-SORT
+        self._active_tracks: list[
+            Track
+        ] = []
+
+    # ------------------------------------------------------------------ #
+    # Properties
+    # ------------------------------------------------------------------ #
 
     @property
     def active_tracks(
@@ -38,6 +62,10 @@ class BoTSORTTracker(BaseTracker):
     ) -> list[Track]:
 
         return self._active_tracks
+    
+    # ------------------------------------------------------------------ #
+    # Update
+    # ------------------------------------------------------------------ #
 
     def update(
         self,
@@ -45,12 +73,101 @@ class BoTSORTTracker(BaseTracker):
         frame: np.ndarray | None = None,
     ) -> list[Track]:
 
-        # TODO
+        if frame is None:
 
-        return []
+            raise ValueError(
+                "BoTSORT requires the current frame."
+            )
 
-    def reset(
-        self,
-    ) -> None:
+        results = (
+            TrackingResults.from_detections(
+                detections
+            )
+        )
 
-        self._active_tracks.clear()
+        tracked = self._tracker.update(
+
+            results,
+
+            img=frame,
+        )
+
+        if len(tracked) == 0:
+
+            self._active_tracks = []
+
+            return self._active_tracks
+
+        tracks: list[
+            Track
+        ] = []
+
+        for row in tracked:
+
+            x1 = float(row[0])
+            y1 = float(row[1])
+            x2 = float(row[2])
+            y2 = float(row[3])
+
+            track_id = int(
+                row[4]
+            )
+
+            score = float(
+                row[5]
+            )
+
+            class_id = int(
+                row[6]
+            )
+
+            class_name = str(
+                class_id
+            )
+
+            for detection in detections:
+
+                if (
+
+                    detection.class_id
+
+                    == class_id
+
+                ):
+
+                    class_name = (
+                        detection.class_name
+                    )
+
+                    break
+
+            tracks.append(
+
+                Track(
+
+                    track_id=track_id,
+
+                    class_id=class_id,
+
+                    class_name=class_name,
+
+                    confidence=score,
+
+                    bbox=BoundingBox(
+
+                        x1=x1,
+
+                        y1=y1,
+
+                        x2=x2,
+
+                        y2=y2,
+                    ),
+                )
+            )
+
+        self._active_tracks = (
+            tracks
+        )
+
+        return self._active_tracks

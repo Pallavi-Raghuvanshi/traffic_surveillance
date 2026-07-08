@@ -9,15 +9,22 @@ from typing import Iterable
 import numpy as np
 
 from core.schemas import BoundingBox
-from speed.base_speed_estimator import BaseSpeedEstimator
+
+from speed.base_speed_estimator import (
+    BaseSpeedEstimator,
+)
 
 
 class PixelSpeedEstimator(BaseSpeedEstimator):
     """
-    Estimates vehicle speed in pixels/second.
+    Estimates object speed in pixels per second.
 
-    This estimator is primarily intended for development and
-    debugging before camera calibration is available.
+    The estimator measures the displacement of the
+    bottom-center point of the bounding box across
+    consecutive frames.
+
+    This implementation is intended for debugging and
+    development until camera calibration is available.
     """
 
     def __init__(
@@ -25,50 +32,81 @@ class PixelSpeedEstimator(BaseSpeedEstimator):
         fps: float,
     ) -> None:
 
+        if fps <= 0:
+
+            raise ValueError(
+                "FPS must be greater than zero."
+            )
+
         self._fps = fps
 
+    # ------------------------------------------------------------------ #
+    # Helpers
+    # ------------------------------------------------------------------ #
+
     @staticmethod
-    def bottom_center(
+    def _bottom_center(
         bbox: BoundingBox,
     ) -> np.ndarray:
 
-        x = (bbox.x1 + bbox.x2) / 2.0
-        y = bbox.y2
+        return np.asarray(
 
-        return np.array(
-            [x, y],
+            (
+
+                (bbox.x1 + bbox.x2) / 2.0,
+
+                bbox.y2,
+            ),
+
             dtype=np.float32,
         )
+
+    # ------------------------------------------------------------------ #
+    # Estimate
+    # ------------------------------------------------------------------ #
 
     def estimate(
         self,
         trajectory: Iterable[BoundingBox],
     ) -> float:
 
-        trajectory = list(trajectory)
+        points = list(
+            trajectory
+        )
 
-        if len(trajectory) < 2:
+        if len(points) < 2:
+
             return 0.0
 
-        distance = 0.0
+        total_distance = 0.0
 
-        for previous, current in zip(
-            trajectory[:-1],
-            trajectory[1:],
-        ):
+        previous = self._bottom_center(
+            points[0]
+        )
 
-            p1 = self.bottom_center(previous)
-            p2 = self.bottom_center(current)
+        for bbox in points[1:]:
 
-            distance += np.linalg.norm(
-                p2 - p1
+            current = self._bottom_center(
+                bbox
             )
 
-        duration = (
-            len(trajectory) - 1
+            total_distance += float(
+
+                np.linalg.norm(
+                    current - previous
+                )
+            )
+
+            previous = current
+
+        elapsed_time = (
+
+            len(points) - 1
+
         ) / self._fps
 
-        if duration <= 0:
+        if elapsed_time <= 0:
+
             return 0.0
 
-        return distance / duration
+        return total_distance / elapsed_time

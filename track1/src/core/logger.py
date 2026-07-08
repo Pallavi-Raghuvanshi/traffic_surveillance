@@ -1,16 +1,43 @@
+# ============================================================================
+# logger.py
+# ============================================================================
+
 from __future__ import annotations
 
 import logging
 
 
-def get_logger(name: str) -> logging.Logger:
+_CONFIGURED = False
+
+
+def get_logger(
+    name: str,
+) -> logging.Logger:
     """
     Return a configured logger instance.
+
+    Logging configuration is performed only once for
+    the entire application.
     """
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-    )
+    global _CONFIGURED
 
-    return logging.getLogger(name)
+    if not _CONFIGURED:
+
+        logging.basicConfig(
+
+            level=logging.INFO,
+
+            format=(
+                "%(asctime)s | "
+                "%(levelname)s | "
+                "%(name)s | "
+                "%(message)s"
+            ),
+        )
+
+        _CONFIGURED = True
+
+    return logging.getLogger(
+        name
+    )

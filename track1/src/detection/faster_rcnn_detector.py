@@ -6,16 +6,13 @@ from __future__ import annotations
 
 import cv2
 import numpy as np
-
 import torch
+
 from PIL import Image
 
 from torchvision.models.detection import (
-    fasterrcnn_resnet50_fpn,
-)
-
-from torchvision.models.detection import (
     FasterRCNN_ResNet50_FPN_Weights,
+    fasterrcnn_resnet50_fpn,
 )
 
 from core.config import Config
@@ -27,7 +24,7 @@ from detection.base_detector import BaseDetector
 
 class FasterRCNNDetector(BaseDetector):
     """
-    Faster R-CNN detector wrapper.
+    Wrapper around TorchVision Faster R-CNN.
     """
 
     def __init__(
@@ -35,33 +32,55 @@ class FasterRCNNDetector(BaseDetector):
         config: Config,
     ) -> None:
 
-        detection_cfg = config["detection"]
+        detection_cfg = config[
+            "detection"
+        ]
 
-        self.confidence = detection_cfg[
+        self._confidence = detection_cfg[
             "confidence"
         ]
 
-        self.device = torch.device(
-            detection_cfg["device"]
+        self._device = torch.device(
+            detection_cfg[
+                "device"
+            ]
         )
+
+        self._allowed_classes = {
+
+            class_name.lower()
+
+            for class_name in detection_cfg[
+                "classes"
+            ]
+        }
 
         weights = (
             FasterRCNN_ResNet50_FPN_Weights.DEFAULT
         )
 
-        self.transforms = weights.transforms()
+        self._transforms = (
+            weights.transforms()
+        )
 
-        self.model = (
+        self._model = (
+
             fasterrcnn_resnet50_fpn(
                 weights=weights
             )
-            .to(self.device)
+
+            .to(self._device)
+
             .eval()
         )
 
-        self.class_names = weights.meta[
+        self._class_names = weights.meta[
             "categories"
         ]
+
+    # ------------------------------------------------------------------ #
+    # Detection
+    # ------------------------------------------------------------------ #
 
     def detect(
         self,
@@ -69,23 +88,31 @@ class FasterRCNNDetector(BaseDetector):
     ) -> list[Detection]:
 
         rgb = cv2.cvtColor(
+
             frame,
+
             cv2.COLOR_BGR2RGB,
         )
 
-        image = Image.fromarray(rgb)
+        image = Image.fromarray(
+            rgb
+        )
 
-        image = self.transforms(
+        image = self._transforms(
             image
-        ).to(self.device)
+        ).to(
+            self._device
+        )
 
         with torch.no_grad():
 
-            prediction = self.model(
+            prediction = self._model(
                 [image]
             )[0]
 
-        detections: list[Detection] = []
+        detections: list[
+            Detection
+        ] = []
 
         for box, score, label in zip(
 
@@ -96,25 +123,58 @@ class FasterRCNNDetector(BaseDetector):
             prediction["labels"],
         ):
 
-            score = float(score)
+            score = float(
+                score.item()
+            )
 
-            if score < self.confidence:
+            if score < self._confidence:
+
+                continue
+
+            label = int(
+                label.item()
+            )
+
+            class_name = (
+
+                self._class_names[label]
+
+                if label < len(
+                    self._class_names
+                )
+
+                else str(label)
+
+            ).lower()
+
+            if (
+
+                class_name
+
+                not in self._allowed_classes
+
+            ):
+
                 continue
 
             x1, y1, x2, y2 = (
-                box.cpu().numpy()
-            )
 
-            label = int(label)
+                box.cpu()
+                .numpy()
+            )
 
             detections.append(
 
                 Detection(
 
                     bbox=BoundingBox(
+
                         x1=float(x1),
+
                         y1=float(y1),
+
                         x2=float(x2),
+
                         y2=float(y2),
                     ),
 
@@ -122,18 +182,22 @@ class FasterRCNNDetector(BaseDetector):
 
                     class_id=label,
 
-                    class_name=(
-                        self.class_names[label]
-                        if label < len(self.class_names)
-                        else str(label)
-                    ),
+                    class_name=class_name,
                 )
             )
 
         return detections
 
+    # ------------------------------------------------------------------ #
+    # Reset
+    # ------------------------------------------------------------------ #
+
     def reset(
         self,
     ) -> None:
+
+        """
+        Stateless detector.
+        """
 
         pass

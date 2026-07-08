@@ -1,1 +1,11 @@
-from .video_loader import VideoLoader
+# ============================================================================
+# input/__init__.py
+# ============================================================================
+
+from .video_loader import (
+    VideoLoader,
+)
+
+__all__ = [
+    "VideoLoader",
+]

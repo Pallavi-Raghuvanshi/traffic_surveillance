@@ -5,32 +5,64 @@
 from __future__ import annotations
 
 from core.config import Config
-
 from core.logger import get_logger
 
-from experiments import ExperimentRunner
+from evaluation.benchmark_summary import BenchmarkSummary
+
+from experiments import (
+    ExperimentRunner,
+)
 
 
 logger = get_logger(__name__)
 
 
-def main() -> None:
+def main(
+    config: Config | None = None,
+) -> BenchmarkSummary:
+    """
+    Traffic Surveillance entry point.
+
+    Parameters
+    ----------
+    config
+        Optional configuration instance.
+
+    Returns
+    -------
+    BenchmarkSummary
+        Benchmark summary generated after execution.
+    """
 
     logger.info(
         "Traffic Surveillance Started"
     )
 
-    config = Config()
+    try:
 
-    runner = ExperimentRunner(
-        config
-    )
+        if config is None:
 
-    runner.run()
+            config = Config()
 
-    logger.info(
-        "Traffic Surveillance Finished"
-    )
+        runner = ExperimentRunner(
+            config
+        )
+
+        summary = runner.run()
+
+        logger.info(
+            "Traffic Surveillance Finished"
+        )
+
+        return summary
+
+    except Exception:
+
+        logger.exception(
+            "Traffic Surveillance Failed."
+        )
+
+        raise
 
 
 if __name__ == "__main__":

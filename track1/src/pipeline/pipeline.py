@@ -8,6 +8,19 @@ import time
 
 from core.logger import get_logger
 
+from evaluation.benchmark_summary import (
+    BenchmarkSummary,
+)
+
+from evaluation.evaluator import (
+    Evaluator,
+)
+
+from evaluation.metrics import (
+    Metrics,
+)
+
+
 logger = get_logger(__name__)
 
 
@@ -15,10 +28,10 @@ class Pipeline:
     """
     Executes the complete Track 1 processing pipeline.
 
-    Workflow
-    --------
-    Video
-        ↓
+    Pipeline owns the ONLY frame-processing loop.
+
+    Responsibilities
+    ----------------
     Detection
         ↓
     Tracking
@@ -29,68 +42,104 @@ class Pipeline:
         ↓
     Visualization
         ↓
+    Metrics
+        ↓
     Evaluation
+
+    Pipeline is intentionally unaware of:
+
+    - benchmarking
+    - exporting
+    - experiment types
+    - output directories
     """
 
     def __init__(
         self,
+        *,
         video_loader,
         detector,
         tracker,
         trajectory_manager,
         speed_estimator,
-        evaluator,
+        metrics: Metrics,
+        evaluator: Evaluator,
         visualizer,
     ) -> None:
 
         self.video_loader = video_loader
+
         self.detector = detector
+
         self.tracker = tracker
-        self.trajectory_manager = trajectory_manager
-        self.speed_estimator = speed_estimator
+
+        self.trajectory_manager = (
+            trajectory_manager
+        )
+
+        self.speed_estimator = (
+            speed_estimator
+        )
+
+        self.metrics = metrics
+
         self.evaluator = evaluator
+
         self.visualizer = visualizer
+
+    # ------------------------------------------------------------------ #
+    # Run
+    # ------------------------------------------------------------------ #
 
     def run(
         self,
-    ) -> None:
+    ) -> BenchmarkSummary:
 
-        logger.info("Pipeline started.")
+        logger.info(
+            "Pipeline started."
+        )
 
         for frame_number, frame in self.video_loader:
 
-            start = time.perf_counter()
+            start_time = (
+                time.perf_counter()
+            )
 
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
             # Detection
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
 
-            detections = self.detector.detect(
-                frame
+            detections = (
+                self.detector.detect(
+                    frame
+                )
             )
 
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
             # Tracking
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
 
-            tracks = self.tracker.update(
-                detections,
-                frame,
+            tracks = (
+                self.tracker.update(
+                    detections,
+                    frame,
+                )
             )
 
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
             # Trajectory Management
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
 
             self.trajectory_manager.update(
                 tracks
             )
 
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
             # Speed Estimation
-            # ---------------------------------------------------------
+            # ----------------------------------------------------------
 
             speeds: list[float] = []
+
             speed_map: dict[int, float] = {}
 
             for track in tracks:
@@ -107,39 +156,81 @@ class Pipeline:
                     )
                 )
 
-                speeds.append(speed)
+                speeds.append(
+                    speed
+                )
 
                 speed_map[
                     track.track_id
                 ] = speed
 
-            # ---------------------------------------------------------
-            # Visualization
-            # ---------------------------------------------------------
-
-            frame = self.visualizer.draw_tracks(
-                frame,
-                tracks,
-                speed_map,
-            )
-
-            # ---------------------------------------------------------
-            # Evaluation
-            # ---------------------------------------------------------
-
-            elapsed = (
+            processing_time = (
                 time.perf_counter()
-                - start
+                - start_time
             )
 
-            self.evaluator.update(
+            fps = (
+                1.0 / processing_time
+                if processing_time > 0
+                else 0.0
+            )
+
+            # ----------------------------------------------------------
+            # Visualization
+            # ----------------------------------------------------------
+
+            annotated_frame = (
+                self.visualizer.draw_tracks(
+                    frame=frame,
+                    tracks=tracks,
+                    speeds=speed_map,
+                    fps=fps,
+                    frame_number=frame_number,
+                )
+            )
+
+            # ----------------------------------------------------------
+            # Always safe to call.
+            # Performs no-op when no VideoWriter exists.
+            # ----------------------------------------------------------
+
+            self.visualizer.write(
+                annotated_frame
+            )
+
+            # ----------------------------------------------------------
+            # Runtime Metrics
+            # ----------------------------------------------------------
+
+            self.metrics.update(
+                processing_time=processing_time,
                 num_detections=len(
                     detections
                 ),
-                processing_time=elapsed,
+                num_tracks=len(
+                    tracks
+                ),
                 speeds=speeds,
             )
 
-        logger.info("Pipeline finished.")
+            # ----------------------------------------------------------
+            # Algorithm Evaluation
+            # ----------------------------------------------------------
 
-        self.evaluator.print_summary()
+            self.evaluator.update(
+                detections=detections,
+                tracks=tracks,
+                speeds=speeds,
+            )
+
+        # --------------------------------------------------------------
+        # Cleanup
+        # --------------------------------------------------------------
+
+        self.visualizer.close()
+
+        logger.info(
+            "Pipeline finished."
+        )
+
+        return self.metrics.summary()
