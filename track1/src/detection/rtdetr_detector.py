@@ -17,7 +17,7 @@ from detection.base_detector import BaseDetector
 
 class RTDETRDetector(BaseDetector):
     """
-    RT-DETR detector wrapper.
+    Wrapper around the Ultralytics RT-DETR detector.
     """
 
     def __init__(
@@ -25,43 +25,90 @@ class RTDETRDetector(BaseDetector):
         config: Config,
     ) -> None:
 
-        detection_cfg = config["detection"]
+        detection_cfg = config[
+            "detection"
+        ]
 
-        self.model = RTDETR(
-            detection_cfg["model"]
+        model_path = detection_cfg[
+            "model"
+        ]
+
+        if not model_path:
+
+            raise ValueError(
+                "Detection model path is required."
+            )
+
+        self._model = RTDETR(
+            model_path
         )
 
-        self.confidence = detection_cfg[
+        self._confidence = detection_cfg[
             "confidence"
         ]
 
-        self.device = detection_cfg[
+        self._device = detection_cfg[
             "device"
         ]
+
+        self._allowed_classes = {
+
+            class_name.lower()
+
+            for class_name in detection_cfg[
+                "classes"
+            ]
+        }
+
+    # ------------------------------------------------------------------ #
+    # Detection
+    # ------------------------------------------------------------------ #
 
     def detect(
         self,
         frame: np.ndarray,
     ) -> list[Detection]:
 
-        results = self.model.predict(
+        results = self._model.predict(
 
             source=frame,
 
-            conf=self.confidence,
+            conf=self._confidence,
 
-            device=self.device,
+            device=self._device,
 
             verbose=False,
         )
 
-        detections: list[Detection] = []
+        detections: list[
+            Detection
+        ] = []
 
         for result in results:
 
+            names = result.names
+
             for box in result.boxes:
 
-                x1, y1, x2, y2 = (
+                class_id = int(
+                    box.cls.item()
+                )
+
+                class_name = names[
+                    class_id
+                ].lower()
+
+                if (
+
+                    class_name
+
+                    not in self._allowed_classes
+
+                ):
+
+                    continue
+
+                xyxy = (
                     box.xyxy[0]
                     .cpu()
                     .numpy()
@@ -72,30 +119,46 @@ class RTDETRDetector(BaseDetector):
                     Detection(
 
                         bbox=BoundingBox(
-                            x1=float(x1),
-                            y1=float(y1),
-                            x2=float(x2),
-                            y2=float(y2),
+
+                            x1=float(
+                                xyxy[0]
+                            ),
+
+                            y1=float(
+                                xyxy[1]
+                            ),
+
+                            x2=float(
+                                xyxy[2]
+                            ),
+
+                            y2=float(
+                                xyxy[3]
+                            ),
                         ),
 
                         confidence=float(
                             box.conf.item()
                         ),
 
-                        class_id=int(
-                            box.cls.item()
-                        ),
+                        class_id=class_id,
 
-                        class_name=result.names[
-                            int(box.cls.item())
-                        ],
+                        class_name=class_name,
                     )
                 )
 
         return detections
 
+    # ------------------------------------------------------------------ #
+    # Reset
+    # ------------------------------------------------------------------ #
+
     def reset(
         self,
     ) -> None:
+
+        """
+        Stateless detector.
+        """
 
         pass
