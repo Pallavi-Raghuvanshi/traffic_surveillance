@@ -21,33 +21,48 @@ def main(
     config: Config | None = None,
 ) -> BenchmarkSummary:
     """
-    Project entry point.
+    Traffic Surveillance entry point.
+
+    Parameters
+    ----------
+    config
+        Optional configuration instance.
 
     Returns
     -------
     BenchmarkSummary
-        Summary generated after pipeline execution.
+        Benchmark summary generated after execution.
     """
 
     logger.info(
         "Traffic Surveillance Started"
     )
 
-    if config is None:
+    try:
 
-        config = Config()
+        if config is None:
 
-    runner = ExperimentRunner(
-        config
-    )
+            config = Config()
 
-    summary = runner.run()
+        runner = ExperimentRunner(
+            config
+        )
 
-    logger.info(
-        "Traffic Surveillance Finished"
-    )
+        summary = runner.run()
 
-    return summary
+        logger.info(
+            "Traffic Surveillance Finished"
+        )
+
+        return summary
+
+    except Exception:
+
+        logger.exception(
+            "Traffic Surveillance Failed."
+        )
+
+        raise
 
 
 if __name__ == "__main__":
