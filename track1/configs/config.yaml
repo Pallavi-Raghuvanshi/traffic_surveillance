@@ -1,94 +1,154 @@
+# ============================================================================
 # config.yaml
-# main configuration file
-
+# ============================================================================
+# Main configuration for the Traffic Surveillance System
+# ============================================================================
 
 project:
   name: "AI City Track 1"
   version: "1.0"
 
+# ============================================================================
+# Paths
+# ============================================================================
+
 paths:
   video: "data/raw/sample.avi"
-  output_dir: "outputs"
+  default_video: "data/raw/sample.avi"
+
   model_dir: "models"
+
   homography: "data/calibration/homography.npy"
 
-video:
-  process_fps: 10
-  display: true
-  default_video: "data/raw/sample.avi"
-  backend: "opencv"          # Future: ffmpeg, gstreamer
-  buffer_size: 1             # Reserved for future streaming support
+  output_dir: "outputs"
+
+# ============================================================================
+# Logging
+# ============================================================================
 
 logging:
   level: INFO
 
+# ============================================================================
+# Video
+# ============================================================================
+
+video:
+  process_fps: 10
+
+  display: true
+
+  backend: opencv
+
+  buffer_size: 1
+
+# ============================================================================
+# Detection
+# ============================================================================
+
 detection:
-  algorithm: "ultralytics"          # ultralytics | faster_rcnn
-  model: "yolo11n.pt"
+
+  algorithm: ultralytics
+
+  model: "models/yolo11n.pt"
+
   confidence: 0.25
+
   iou: 0.45
-  device: "cuda"             # cpu | cuda | mps
+
+  device: cuda
+
   classes:
+
     - car
+
     - bus
+
     - truck
+
     - motorcycle
 
-tracking:
-  algorithm: "bytetrack"
+# ============================================================================
+# Tracking
+# ============================================================================
 
-  frame_rate: 30
+tracking:
+
+  algorithm: bytetrack
 
   bytetrack:
+
     track_activation_threshold: 0.25
+
     lost_track_buffer: 30
-    minimum_matching_threshold: 0.8
-    minimum_consecutive_frames: 3
-    minimum_box_area: 10
+
+    minimum_matching_threshold: 0.80
 
   deepsort:
+
     max_age: 30
-    nn_budget: 100
-    max_cosine_distance: 0.2
+
+    n_init: 3
+
+    max_iou_distance: 0.70
+
+    max_cosine_distance: 0.20
 
   botsort:
-    proximity_thresh: 0.5
+
+    track_high_thresh: 0.50
+
+    track_low_thresh: 0.10
+
+    new_track_thresh: 0.60
+
+    match_thresh: 0.80
+
+    track_buffer: 30
+
+    fuse_score: true
+
+    proximity_thresh: 0.50
+
     appearance_thresh: 0.25
 
+    with_reid: false
+
+    gmc_method: sparseOptFlow
+
+    model: auto
+
+# ============================================================================
+# Speed Estimation
+# ============================================================================
+
 speed:
-  algorithm: "pixel"
+
+  algorithm: pixel
 
   pixel:
+
     smoothing_window: 5
 
   homography:
+
     smoothing_window: 5
 
   optical_flow:
+
     window_size: 15
+
     pyramid_levels: 3
 
   hybrid:
-    homography_weight: 0.7
-    optical_flow_weight: 0.3
 
-# speed:                            (after caliberation)
-#   algorithm: "homography"
+    homography_weight: 0.70
 
-#   homography:
-#     smoothing_window: 5
+    optical_flow_weight: 0.30
 
-#   optical_flow:
-#     window_size: 15
-#     pyramid_levels: 3
-
-#   hybrid:
-#     homography_weight: 0.7
-#     optical_flow_weight: 0.3
-
-###############################################################################
+# ============================================================================
 # Benchmark
-###############################################################################
+# ============================================================================
 
 benchmark:
 
@@ -99,12 +159,6 @@ benchmark:
   experiment_name: null
 
   output_directory: outputs
-
-  detector:
-
-    algorithm: ultralytics
-
-    model: models/yolo11n.pt
 
   detectors:
 
@@ -118,7 +172,7 @@ benchmark:
       model: models/rtdetr-l.pt
 
     - algorithm: faster_rcnn
-      model: null
+      model: torchvision
 
   trackers:
 
@@ -128,12 +182,10 @@ benchmark:
 
     - botsort
 
-  # ------------------------------------------------------------
-  # Output
-  # ------------------------------------------------------------
-
-  output_directory: outputs
   save_video: true
+
   save_csv: true
+
   save_json: true
+
   display: false
