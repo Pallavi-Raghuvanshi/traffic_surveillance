@@ -22,13 +22,14 @@ class Visualizer:
 
         visualizer.write(frame)
 
-    If no output video is configured, write() becomes a no-op.
+    If no output video is configured,
+    write() becomes a no-op.
     """
 
     def __init__(
         self,
         *,
-        show_labels: bool =True,
+        show_labels: bool = True,
         show_speed: bool = True,
         show_track_id: bool = True,
         output_video: str | Path | None = None,
@@ -46,23 +47,34 @@ class Visualizer:
         self._writer: cv2.VideoWriter | None = None
 
         if output_video is None:
+
             return
 
         if (
+
             fps is None
+
             or frame_width is None
+
             or frame_height is None
+
         ):
+
             raise ValueError(
+
                 "fps, frame_width and frame_height "
-                "must be provided when output_video "
-                "is specified."
+                "must be specified when output_video "
+                "is enabled."
             )
 
-        output_video = Path(output_video)
+        output_video = Path(
+            output_video
+        )
 
         output_video.parent.mkdir(
+
             parents=True,
+
             exist_ok=True,
         )
 
@@ -71,14 +83,28 @@ class Visualizer:
         )
 
         self._writer = cv2.VideoWriter(
+
             str(output_video),
+
             fourcc,
+
             fps,
+
             (
+
                 frame_width,
+
                 frame_height,
             ),
         )
+
+        if not self._writer.isOpened():
+
+            raise RuntimeError(
+
+                f"Unable to create output video: "
+                f"{output_video}"
+            )
 
     # ------------------------------------------------------------------ #
     # Draw
@@ -98,75 +124,107 @@ class Visualizer:
 
         for track in tracks:
 
-            x1 = int(track.bbox.x1)
-            y1 = int(track.bbox.y1)
-            x2 = int(track.bbox.x2)
-            y2 = int(track.bbox.y2)
+            bbox = track.bbox
+
+            x1 = int(bbox.x1)
+            y1 = int(bbox.y1)
+            x2 = int(bbox.x2)
+            y2 = int(bbox.y2)
 
             cv2.rectangle(
+
                 output,
+
                 (x1, y1),
+
                 (x2, y2),
+
                 (0, 255, 0),
+
                 2,
             )
 
-            text: list[str] = []
+            label: list[str] = []
 
             if self.show_track_id:
 
-                text.append(
+                label.append(
                     f"ID {track.track_id}"
                 )
 
             if self.show_labels:
 
-                text.append(
+                label.append(
                     track.class_name
                 )
 
             if self.show_speed:
 
-                speed = speeds.get(
-                    track.track_id,
-                    0.0,
-                )
+                label.append(
 
-                text.append(
-                    f"{speed:.1f} km/h"
+                    f"{speeds.get(track.track_id, 0.0):.1f} km/h"
                 )
 
             cv2.putText(
+
                 output,
-                " | ".join(text),
-                (x1, y1 - 10),
+
+                " | ".join(label),
+
+                (
+
+                    x1,
+
+                    max(
+                        20,
+                        y1 - 10,
+                    ),
+                ),
+
                 cv2.FONT_HERSHEY_SIMPLEX,
+
                 0.5,
+
                 (0, 255, 0),
+
                 2,
             )
 
         if fps is not None:
 
             cv2.putText(
+
                 output,
+
                 f"FPS : {fps:.2f}",
+
                 (20, 30),
+
                 cv2.FONT_HERSHEY_SIMPLEX,
+
                 0.8,
+
                 (0, 255, 255),
+
                 2,
             )
 
         if frame_number is not None:
 
             cv2.putText(
+
                 output,
+
                 f"Frame : {frame_number}",
+
                 (20, 65),
+
                 cv2.FONT_HERSHEY_SIMPLEX,
+
                 0.8,
+
                 (255, 255, 0),
+
                 2,
             )
 
@@ -181,16 +239,17 @@ class Visualizer:
         frame: np.ndarray,
     ) -> None:
         """
-        Always safe to call.
-
-        Performs no operation when a VideoWriter
-        has not been configured.
+        Safe to call regardless of whether an output
+        video has been configured.
         """
 
         if self._writer is None:
+
             return
 
-        self._writer.write(frame)
+        self._writer.write(
+            frame
+        )
 
     # ------------------------------------------------------------------ #
     # Cleanup
@@ -201,6 +260,7 @@ class Visualizer:
     ) -> None:
 
         if self._writer is None:
+
             return
 
         self._writer.release()
