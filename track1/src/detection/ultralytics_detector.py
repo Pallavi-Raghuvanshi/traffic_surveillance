@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
-from ultralytics import YOLO
 import numpy as np
+from ultralytics import YOLO
 
 from core.config import Config
 from core.schemas import BoundingBox
@@ -16,12 +16,13 @@ from detection.base_detector import BaseDetector
 
 class UltralyticsDetector(BaseDetector):
     """
-    Wrapper around Ultralytics detectors.
+    Wrapper around Ultralytics detection models.
 
-    Supports:
+    Supported models include:
+
     - YOLO11
-    - RT-DETR
-    - Future Ultralytics models
+    - YOLO26
+    - Future Ultralytics detectors
     """
 
     def __init__(
@@ -29,37 +30,70 @@ class UltralyticsDetector(BaseDetector):
         config: Config,
     ) -> None:
 
-        detection_cfg = config["detection"]
+        detection_cfg = config[
+            "detection"
+        ]
 
-        self.model = YOLO(
-            detection_cfg["model"]
+        model_path = detection_cfg[
+            "model"
+        ]
+
+        if not model_path:
+
+            raise ValueError(
+                "Detection model path is required."
+            )
+
+        self._model = YOLO(
+            model_path
         )
 
-        self.confidence = detection_cfg["confidence"]
+        self._confidence = detection_cfg[
+            "confidence"
+        ]
 
-        self.iou = detection_cfg["iou"]
+        self._iou = detection_cfg[
+            "iou"
+        ]
 
-        self.device = detection_cfg["device"]
+        self._device = detection_cfg[
+            "device"
+        ]
 
-        self.allowed_classes = {
-            name.lower()
-            for name in detection_cfg["classes"]
+        self._allowed_classes = {
+
+            class_name.lower()
+
+            for class_name in detection_cfg[
+                "classes"
+            ]
         }
+
+    # ------------------------------------------------------------------ #
+    # Detection
+    # ------------------------------------------------------------------ #
 
     def detect(
         self,
         frame: np.ndarray,
     ) -> list[Detection]:
 
-        results = self.model.predict(
-            frame,
-            conf=self.confidence,
-            iou=self.iou,
-            device=self.device,
+        results = self._model.predict(
+
+            source=frame,
+
+            conf=self._confidence,
+
+            iou=self._iou,
+
+            device=self._device,
+
             verbose=False,
         )
 
-        detections: list[Detection] = []
+        detections: list[
+            Detection
+        ] = []
 
         for result in results:
 
@@ -67,37 +101,55 @@ class UltralyticsDetector(BaseDetector):
 
             for box in result.boxes:
 
-                class_id = int(box.cls)
+                class_id = int(
+                    box.cls.item()
+                )
 
                 class_name = names[
                     class_id
                 ].lower()
 
                 if (
+
                     class_name
-                    not in self.allowed_classes
+
+                    not in self._allowed_classes
+
                 ):
+
                     continue
 
-                bbox = BoundingBox(
-
-                    x1=float(box.xyxy[0][0]),
-
-                    y1=float(box.xyxy[0][1]),
-
-                    x2=float(box.xyxy[0][2]),
-
-                    y2=float(box.xyxy[0][3]),
+                xyxy = (
+                    box.xyxy[0]
+                    .cpu()
+                    .numpy()
                 )
 
                 detections.append(
 
                     Detection(
 
-                        bbox=bbox,
+                        bbox=BoundingBox(
+
+                            x1=float(
+                                xyxy[0]
+                            ),
+
+                            y1=float(
+                                xyxy[1]
+                            ),
+
+                            x2=float(
+                                xyxy[2]
+                            ),
+
+                            y2=float(
+                                xyxy[3]
+                            ),
+                        ),
 
                         confidence=float(
-                            box.conf
+                            box.conf.item()
                         ),
 
                         class_id=class_id,

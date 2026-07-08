@@ -1,4 +1,6 @@
+# ============================================================================
 # video_loader.py
+#
 # Responsibilities:
 #     - Open and validate video files
 #     - Extract and cache video metadata
@@ -15,8 +17,9 @@ from typing import Iterator
 import cv2
 import numpy as np
 
-from core.schemas import VideoMetadata
 from core.logger import get_logger
+from core.schemas import VideoMetadata
+
 
 logger = get_logger(__name__)
 
@@ -30,71 +33,53 @@ class VideoLoader:
     This class is the ONLY component in the project that communicates
     directly with OpenCV's VideoCapture object.
 
-    Every downstream module (Detector, Tracker, Speed Estimator, etc.)
-    receives frames through this class instead of directly using OpenCV.
-
-    This abstraction keeps the rest of the system independent from the
+    Every downstream module receives frames exclusively through this
+    class, keeping the remainder of the project independent from the
     underlying video backend.
-
-    Attributes
-    ----------
-    video_path : Path
-        Absolute path to the input video.
-
     """
 
-    ###########################################################################
+    # ------------------------------------------------------------------ #
     # Constructor
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
-    def __init__(self, video_path: str | Path) -> None:
-        """
-        Initialize the video loader.
+    def __init__(
+        self,
+        video_path: str | Path,
+    ) -> None:
 
-        Parameters
-        ----------
-        video_path : str | Path
-            Path to the input video.
-
-        Raises
-        ------
-        FileNotFoundError
-            If the video file does not exist.
-
-        RuntimeError
-            If OpenCV fails to open the video.
-        """
-
-        # ------------------------------------------------------------
-        # Store video path
-        # ------------------------------------------------------------
-
-        self.video_path = Path(video_path)
+        self.video_path = Path(
+            video_path
+        )
 
         if not self.video_path.exists():
+
             raise FileNotFoundError(
                 f"Video not found: {self.video_path}"
             )
 
-        # ------------------------------------------------------------
-        # Create OpenCV VideoCapture
-        # ------------------------------------------------------------
-
-        self._capture = cv2.VideoCapture(str(self.video_path))
+        self._capture = cv2.VideoCapture(
+            str(self.video_path)
+        )
 
         if not self._capture.isOpened():
+
             raise RuntimeError(
                 f"Unable to open video: {self.video_path}"
             )
 
-        # ------------------------------------------------------------
-        # Cache video metadata
-        # Metadata never changes, therefore read only once.
-        # ------------------------------------------------------------
+        # --------------------------------------------------------------
+        # Cache immutable metadata
+        # --------------------------------------------------------------
 
         self._fps = self._capture.get(
             cv2.CAP_PROP_FPS
         )
+
+        if self._fps <= 0:
+
+            raise RuntimeError(
+                "Unable to determine video FPS."
+            )
 
         self._width = int(
             self._capture.get(
@@ -114,15 +99,17 @@ class VideoLoader:
             )
         )
 
-        self._duration = (
-            self._frame_count / self._fps
-            if self._fps > 0
-            else 0.0
-        )
+        if self._frame_count <= 0:
 
-        # ------------------------------------------------------------
-        # FOURCC Codec
-        # ------------------------------------------------------------
+            logger.warning(
+                "Video reports zero frames."
+            )
+
+        self._duration = (
+
+            self._frame_count
+            / self._fps
+        )
 
         fourcc = int(
             self._capture.get(
@@ -131,23 +118,20 @@ class VideoLoader:
         )
 
         self._codec = "".join(
-            [
-                chr((fourcc >> 8 * i) & 0xFF)
-                for i in range(4)
-            ]
-        )
 
-        # ------------------------------------------------------------
-        # Current frame pointer
-        # ------------------------------------------------------------
+            chr(
+                (fourcc >> (8 * i))
+                & 0xFF
+            )
+
+            for i in range(4)
+
+        ).strip()
 
         self._current_frame = 0
 
-        # ------------------------------------------------------------
-        # Logging
-        # ------------------------------------------------------------
-
         logger.info(
+
             (
                 "Loaded video '%s' | "
                 "%dx%d | "
@@ -156,109 +140,135 @@ class VideoLoader:
                 "%.2f sec | "
                 "Codec: %s"
             ),
+
             self.video_path.name,
+
             self._width,
+
             self._height,
+
             self._fps,
+
             self._frame_count,
+
             self._duration,
+
             self._codec,
         )
 
-    ###########################################################################
+    # ------------------------------------------------------------------ #
     # Read-only Properties
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
     @property
-    def fps(self) -> float:
-        """Frames per second."""
+    def fps(
+        self,
+    ) -> float:
+
         return self._fps
 
     @property
-    def width(self) -> int:
-        """Video width in pixels."""
+    def width(
+        self,
+    ) -> int:
+
         return self._width
 
     @property
-    def height(self) -> int:
-        """Video height in pixels."""
+    def height(
+        self,
+    ) -> int:
+
         return self._height
 
     @property
-    def frame_count(self) -> int:
-        """Total number of frames."""
+    def frame_count(
+        self,
+    ) -> int:
+
         return self._frame_count
 
     @property
-    def duration(self) -> float:
-        """Video duration in seconds."""
+    def duration(
+        self,
+    ) -> float:
+
         return self._duration
 
     @property
-    def codec(self) -> str:
-        """Video codec (FOURCC)."""
+    def codec(
+        self,
+    ) -> str:
+
         return self._codec
 
     @property
-    def current_frame(self) -> int:
-        """Current frame index."""
+    def current_frame(
+        self,
+    ) -> int:
+
         return self._current_frame
 
     @property
-    def metadata(self) -> VideoMetadata:
-        """
-        Return immutable video metadata.
-        """
+    def metadata(
+        self,
+    ) -> VideoMetadata:
 
         return VideoMetadata(
+
             filename=self.video_path.name,
+
             width=self._width,
+
             height=self._height,
+
             fps=self._fps,
+
             frame_count=self._frame_count,
+
             duration=self._duration,
+
             codec=self._codec,
         )
-
-    ###########################################################################
+    
+        # ------------------------------------------------------------------ #
     # Public Methods
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
-    def is_opened(self) -> bool:
+    def is_opened(
+        self,
+    ) -> bool:
+
         """
-        Check whether the video is still open.
-
-        Returns
-        -------
-        bool
-            True if the video capture is open.
+        Check whether the underlying VideoCapture
+        is still open.
         """
 
         return self._capture.isOpened()
 
-    def read(self) -> tuple[bool, np.ndarray | None]:
+    def read(
+        self,
+    ) -> tuple[bool, np.ndarray | None]:
+
         """
-        Read the next frame from the video.
+        Read the next frame.
 
         Returns
         -------
-        tuple
-            (success, frame)
-
-            success : bool
-                True if frame was read successfully.
-
-            frame : np.ndarray | None
-                Image in BGR format.
+        (success, frame)
         """
 
         success, frame = self._capture.read()
 
         if success:
+
             self._current_frame += 1
+
             return True, frame
 
-        logger.debug("Reached end of video.")
+        logger.debug(
+            "Reached end of video."
+        )
 
         return False, None
 
@@ -266,91 +276,123 @@ class VideoLoader:
         self,
         frame_index: int,
     ) -> np.ndarray | None:
+
         """
-        Read a specific frame without changing the current playback position.
-
-        Parameters
-        ----------
-        frame_index : int
-
-        Returns
-        -------
-        np.ndarray | None
+        Read a specific frame without affecting the
+        current playback position.
         """
 
-        if frame_index < 0 or frame_index >= self._frame_count:
+        if (
+
+            frame_index < 0
+
+            or frame_index >= self._frame_count
+
+        ):
+
             raise IndexError(
-                f"Frame index {frame_index} is out of range."
+
+                f"Frame index {frame_index} "
+                "is out of range."
             )
 
-        # Store current OpenCV position
         current_position = int(
-            self._capture.get(cv2.CAP_PROP_POS_FRAMES)
+
+            self._capture.get(
+                cv2.CAP_PROP_POS_FRAMES
+            )
         )
 
-        # Jump to requested frame
         self._capture.set(
+
             cv2.CAP_PROP_POS_FRAMES,
+
             frame_index,
         )
 
         success, frame = self._capture.read()
 
-        # Restore previous playback position
         self._capture.set(
+
             cv2.CAP_PROP_POS_FRAMES,
+
             current_position,
         )
 
+        self._current_frame = current_position
+
         if not success:
+
             logger.warning(
+
                 "Unable to read frame %d.",
+
                 frame_index,
             )
+
             return None
 
         return frame
 
-    def reset(self) -> None:
+    def reset(
+        self,
+    ) -> None:
+
         """
-        Reset playback to the first frame.
+        Reset playback to the beginning.
         """
 
         self._capture.set(
+
             cv2.CAP_PROP_POS_FRAMES,
+
             0,
         )
 
         self._current_frame = 0
 
-        logger.debug("Playback reset.")
+        logger.debug(
+            "Playback reset."
+        )
 
-    def release(self) -> None:
+    def release(
+        self,
+    ) -> None:
+
         """
         Release OpenCV resources.
 
         Safe to call multiple times.
         """
 
-        if self._capture.isOpened():
-            self._capture.release()
+        if not self._capture.isOpened():
 
-            logger.info(
-                "Released video '%s'.",
-                self.video_path.name,
-            )
+            return
 
-    ###########################################################################
+        self._capture.release()
+
+        logger.info(
+
+            "Released video '%s'.",
+
+            self.video_path.name,
+        )
+    
+    # ------------------------------------------------------------------ #
     # Iterator Protocol
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
     def __iter__(
         self,
-    ) -> Iterator[tuple[int, np.ndarray]]:
-        """
-        Allow:
+    ) -> Iterator[
+        tuple[int, np.ndarray]
+    ]:
 
-        for frame_id, frame in video_loader
+        """
+        Enable:
+
+            for frame_number, frame in video_loader:
+                ...
         """
 
         self.reset()
@@ -359,25 +401,34 @@ class VideoLoader:
 
     def __next__(
         self,
-    ) -> tuple[int, np.ndarray]:
+    ) -> tuple[
+        int,
+        np.ndarray,
+    ]:
+
         """
-        Return next frame during iteration.
+        Return the next frame during iteration.
         """
 
         success, frame = self.read()
 
         if not success:
+
             raise StopIteration
 
-        return self._current_frame, frame
+        return (
+            self._current_frame,
+            frame,
+        )
 
-    ###########################################################################
+    # ------------------------------------------------------------------ #
     # Context Manager
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
     def __enter__(
         self,
     ) -> "VideoLoader":
+
         """
         Enter context manager.
         """
@@ -390,25 +441,34 @@ class VideoLoader:
         exc_value,
         traceback,
     ) -> None:
+
         """
         Always release resources.
         """
 
         self.release()
 
-    ###########################################################################
+    # ------------------------------------------------------------------ #
     # Destructor
-    ###########################################################################
+    # ------------------------------------------------------------------ #
 
-    def __del__(self) -> None:
+    def __del__(
+        self,
+    ) -> None:
+
         """
         Final safety net.
 
-        If user forgets to call release(),
-        OpenCV resources are still cleaned up.
+        Ensures VideoCapture resources are released even if
+        release() was not explicitly called.
         """
 
         try:
+
             self.release()
+
         except Exception:
+
+            # Never allow exceptions to escape
+            # during interpreter shutdown.
             pass
