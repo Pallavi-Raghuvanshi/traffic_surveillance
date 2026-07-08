@@ -1,11 +1,11 @@
 # ============================================================================
-# visualization/__init__.py
+# input/__init__.py
 # ============================================================================
 
-from .visualizer import (
-    Visualizer,
+from .video_loader import (
+    VideoLoader,
 )
 
 __all__ = [
-    "Visualizer",
+    "VideoLoader",
 ]
