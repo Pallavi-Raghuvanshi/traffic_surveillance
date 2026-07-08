@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"./.venv/Scripts/python.exe\" -c \"import sys; print\\(sys.version\\)\")",
+      "Bash(\"../../.venv/Scripts/python.exe\" -m py_compile experiments/experiment_runner.py tracking/botsort_tracker.py tracking/ultralytics_results_adapter.py benchmark_trackers.py)"
+    ]
+  }
+}
