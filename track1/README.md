@@ -465,14 +465,14 @@ python src/main.py
 - Evaluation framework
 - Benchmarking framework
 - Visualization framework
+- Detector integration (YOLO11n, YOLO26n, RT-DETR-L, Faster R-CNN)
+- Tracker integration (ByteTrack, DeepSORT, official Ultralytics BoT-SORT)
 
 ---
 
 ## 🚧 In Progress
 
-- Detector integration
-- Tracker integration
-- Speed estimation integration
+- Speed estimation integration (`HomographySpeedEstimator`)
 
 ---
 
