@@ -171,3 +171,15 @@ class BoTSORTTracker(BaseTracker):
         )
 
         return self._active_tracks
+
+    # ------------------------------------------------------------------ #
+    # Reset
+    # ------------------------------------------------------------------ #
+
+    def reset(
+        self,
+    ) -> None:
+
+        self._tracker.reset()
+
+        self._active_tracks.clear()
