@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Vehicle Re-Identification Demo</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body class="bg-dark text-light">
+
+    <div class="container py-5">
+
+        <h1 class="text-center mb-1">
+            Vehicle Re-Identification
+        </h1>
+
+        <h5 class="text-center text-secondary mb-5">
+            AI City Challenge - Track 3
+        </h5>
+        {% if error %}
+
+        <div class="alert alert-danger mb-4">
+
+            {{ error }}
+
+        </div>
+
+        {% endif %}
+        <form action="/compare" method="POST" enctype="multipart/form-data">
+
+            <div class="row">
+
+                <!-- Query -->
+
+                <div class="col-md-6">
+
+                    <div class="card bg-secondary">
+
+                        <div class="card-header">
+
+                            Query Vehicle
+
+                        </div>
+
+                        <div class="card-body text-center">
+
+                            {% if query_image %}
+
+                            <img src="{{ url_for('static', filename='uploads/' + query_image) }}" class="preview">
+
+                            {% else %}
+
+                            <div class="placeholder-box">
+
+                                No Image
+
+                            </div>
+
+                            {% endif %}
+
+                            <input type="file" class="form-control mt-3" name="query" accept=".jpg,.jpeg,.png" required>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Gallery -->
+
+                <div class="col-md-6">
+
+                    <div class="card bg-secondary">
+
+                        <div class="card-header">
+
+                            Gallery Vehicle
+
+                        </div>
+
+                        <div class="card-body text-center">
+
+                            {% if gallery_image %}
+
+                            <img src="{{ url_for('static', filename='uploads/' + gallery_image) }}" class="preview">
+
+                            {% else %}
+
+                            <div class="placeholder-box">
+
+                                No Image
+
+                            </div>
+
+                            {% endif %}
+
+                            <input type="file" class="form-control mt-3" name="gallery" accept=".jpg,.jpeg,.png"
+                                required>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="text-center mt-5">
+
+                <button class="btn btn-primary btn-lg px-5">
+
+                    Compare Vehicles
+
+                </button>
+
+            </div>
+
+        </form>
+
+        {% if result %}
+
+        <div class="card bg-white mt-5">
+
+            <div class="card-body">
+
+                <h2 class="text-center">
+
+                    {{ "%.2f"|format(result.percentage) }} %
+
+                </h2>
+                <div class="progress my-4" style="height:30px;">
+
+                    <div class="progress-bar" role="progressbar" style="width: {{ result.percentage }}%;">
+                    </div>
+
+                </div>
+
+                <h3 class="text-center">
+
+                    {{ result.prediction }}
+
+                </h3>
+
+                <hr>
+
+                <div class="row mt-4">
+
+                    <div class="col-md-6">
+
+                        <p>
+
+                            <strong>Cosine Similarity</strong>
+
+                            <br>
+
+                            {{ "%.4f"|format(result.similarity) }}
+
+                        </p>
+
+                        <p>
+
+                            <strong>Embedding Dimension</strong>
+
+                            <br>
+
+                            {{ result.embedding_dimension }}
+
+                        </p>
+
+                        <p>
+
+                            <strong>Inference Time</strong>
+
+                            <br>
+
+                            {{ "%.3f"|format(result.inference_time) }} s
+
+                        </p>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <p>
+
+                            <strong>Model</strong>
+
+                            <br>
+
+                            {{ result.model }}
+
+                        </p>
+
+                        <p>
+
+                            <strong>Checkpoint</strong>
+
+                            <br>
+
+                            {{ result.checkpoint }}
+
+                        </p>
+
+                        <p>
+
+                            <strong>Device</strong>
+
+                            <br>
+
+                            {{ result.device }}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</body>
+
+</html>

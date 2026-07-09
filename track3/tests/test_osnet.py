@@ -1,10 +1,12 @@
-from torchreid.models import build_model
+import torch
 
-model = build_model(
-    name="osnet_x1_0",
-    num_classes=1000,
-    pretrained=True,
-)
+from track3.models.osnet import OSNetModel
 
-print(type(model))
-print("Model created successfully!")
+
+model = OSNetModel()
+
+dummy = torch.randn(1, 3, 256, 256)
+
+embedding = model(dummy)
+
+print(embedding.shape)

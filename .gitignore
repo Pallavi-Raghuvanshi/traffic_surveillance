@@ -42,6 +42,14 @@ outputs/
 
 # Environment variables
 .env
+
+#External library
 deep-person-reid
 
 .claude/
+
+#VeRi Dataset
+Veri
+
+track3/demo/static/uploads/*
+!track3/demo/static/uploads/.gitkeep
