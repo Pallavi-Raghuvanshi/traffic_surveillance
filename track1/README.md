@@ -452,24 +452,6 @@ python src/main.py
 
 # 📅 Development Roadmap
 
-## ✅ Completed
-
-- Project architecture
-- Configuration management
-- Video input pipeline
-- Detection framework
-- Tracking framework
-- Speed estimation framework
-- Calibration module
-- Experiment runner
-- Evaluation framework
-- Benchmarking framework
-- Visualization framework
-- Detector integration (YOLO11n, YOLO26n, RT-DETR-L, Faster R-CNN)
-- Tracker integration (ByteTrack, DeepSORT, official Ultralytics BoT-SORT)
-
----
-
 ## 🚧 In Progress
 
 - Speed estimation integration (`HomographySpeedEstimator`)
@@ -514,8 +496,8 @@ This project is developed for academic and research purposes.
 
 Minor Project
 
-Megh Nanavati
 
-Pallavi Raghuvanshi
+
+Pallavi Raghuvanshi, Megh Nanavati
 
 M.Sc. Data Science
