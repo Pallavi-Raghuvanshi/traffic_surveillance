@@ -245,6 +245,104 @@ Evaluation results are exported automatically for comparison.
 
 ---
 
+# 🖥️ Benchmark Environment
+
+Benchmarking was performed under the following environment:
+
+- **Python**: 3.12
+- **Ultralytics**: 8.4.89
+- **PyTorch** (Torch)
+- **OpenCV**
+- **GPU**: NVIDIA GPU
+
+**Sample video**
+
+| Property   | Value          |
+| ---------- | -------------- |
+| File       | `sample.avi`   |
+| Resolution | 1280 × 720     |
+| FPS        | 10             |
+| Frames     | 2001           |
+
+All detectors and trackers were benchmarked using the **same video** and **identical pipeline settings**, ensuring that the results below are directly comparable across algorithms.
+
+---
+
+# 🚗 Detector Benchmark
+
+| Rank | Detector     | Frames | FPS   | Avg Time (ms) | Avg Detections | Avg Tracks | Avg Speed |
+| ---- | ------------ | -----: | ----: | -------------: | --------------: | ----------: | ---------: |
+| 1    | YOLO11n      | 2001   | 72.84 | 14.67          | 5.16            | 3.91        | 115.37     |
+| 2    | YOLO26n      | 2001   | 67.88 | 15.25          | 4.94            | 3.55        | 115.60     |
+| 3    | RT-DETR-L    | 2001   | 16.67 | 61.50           | 16.75           | 12.21       | 56.79      |
+| 4    | Faster R-CNN | 2001   | 7.14  | 140.10          | 14.53           | 12.22       | 55.62      |
+
+**Discussion**
+
+- **YOLO11n** achieved the highest throughput among all evaluated detectors.
+- **YOLO26n** was slightly slower, with similar detection behaviour overall.
+- **RT-DETR-L** detected considerably more objects but required significantly more computation, reducing achievable FPS.
+- **Faster R-CNN** produced competitive detection counts but was unsuitable for real-time inference due to its low FPS.
+
+---
+
+# 🎯 Tracker Benchmark
+
+| Rank | Tracker   | Frames | FPS   | Avg Time (ms) | Avg Detections | Avg Tracks | Avg Speed |
+| ---- | --------- | -----: | ----: | -------------: | --------------: | ----------: | ---------: |
+| 1    | ByteTrack | 2001   | 69.18 | 15.50           | 5.16            | 3.91        | 115.37     |
+| 2    | BoTSORT   | 2001   | 27.83 | 37.28           | 5.16            | 2.11        | 179.67     |
+| 3    | DeepSORT  | 2001   | 24.85 | 66.57           | 5.16            | 4.69        | 109.21     |
+
+**Discussion**
+
+- **ByteTrack** was the fastest tracker, benefiting from its lightweight, motion-only association strategy.
+- **DeepSORT** incurred additional computational cost due to its use of appearance embeddings for re-identification.
+- The official **Ultralytics BoT-SORT** integration was successfully completed and benchmarked end-to-end within the framework.
+- **BoTSORT** currently reports fewer active tracks than ByteTrack, suggesting that additional parameter tuning (thresholds, GMC, or ReID configuration) may improve its tracking performance.
+
+---
+
+# 🔑 Key Observations
+
+- The detector benchmarking framework is fully functional.
+- The tracker benchmarking framework is fully functional.
+- All algorithms execute through the same `ExperimentRunner` and `Pipeline`, ensuring a fair, like-for-like comparison.
+- Benchmark metrics are automatically exported for every run.
+- **YOLO11n** currently provides the best balance between speed and computational efficiency.
+- **ByteTrack** currently provides the highest throughput among the evaluated trackers.
+- **BoTSORT** is integrated successfully but still requires configuration tuning for optimal tracking performance.
+
+> **⚠️ Important Note**
+>
+> Current speed values are generated using the temporary `PixelSpeedEstimator`.
+>
+> Since no homography calibration has yet been applied, these values are **not** physically meaningful (km/h) and should be interpreted **only as relative benchmarking metrics**.
+>
+> Meaningful real-world vehicle speeds will be available once the `HomographySpeedEstimator` is integrated.
+
+---
+
+# 🧾 Conclusions
+
+- **YOLO11n** is currently selected as the default detector due to its excellent balance of speed and efficiency.
+- **ByteTrack** serves as the primary baseline tracker for the framework.
+- The official **Ultralytics BoT-SORT** integration has been completed successfully and will be further tuned for improved tracking quality.
+- **RT-DETR-L** and **DeepSORT** remain available as higher-complexity alternatives for comparative evaluation.
+
+---
+
+# 🔭 Future Work
+
+- Homography-based speed estimation.
+- BoTSORT hyperparameter tuning.
+- Tracking quality evaluation (MOTA, IDF1, HOTA).
+- Detector evaluation using mAP metrics.
+- Multi-camera evaluation.
+- AI City Challenge dataset benchmarking.
+
+---
+
 # 🧩 Design Principles
 
 The framework is built around the following principles:
