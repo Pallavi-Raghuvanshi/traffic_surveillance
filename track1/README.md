@@ -128,7 +128,6 @@ No pipeline modifications are required.
 
 ## 📅 Roadmap
 
-- ✅ **Completed** — architecture, config management, video input, detection/tracking/speed frameworks, calibration, experiment runner, evaluation & benchmarking frameworks, visualization, detector integration (YOLO11n/26n, RT-DETR-L, Faster R-CNN), tracker integration (ByteTrack, DeepSORT, official BoT-SORT)
 - 🚧 **In Progress** — speed estimation integration (`HomographySpeedEstimator`)
 - 📌 **Planned** — multi-camera tracking, vehicle ReID, traffic density estimation, lane-wise analytics, vehicle counting, event detection, web dashboard, REST API, real-time deployment
 
@@ -146,4 +145,4 @@ Python 3.12+ · OpenCV · NumPy · Ultralytics · PyTorch · SciPy · PyYAML
 
 Developed for academic and research purposes — M.Sc. Data Science Minor Project.
 
-**Megh Nanavati** · **Pallavi Raghuvanshi**
+**Pallavi Raghuvanshi, Megh Nanavati**
