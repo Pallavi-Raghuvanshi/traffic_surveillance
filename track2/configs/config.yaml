@@ -1,0 +1,219 @@
+# ============================================================================
+# config.yaml
+# ============================================================================
+# Main configuration for the Traffic Anomaly Detection System (Track 2)
+# ============================================================================
+
+project:
+  name: "AI City Track 2 - Traffic Anomaly Detection"
+  version: "1.0"
+
+# ============================================================================
+# Paths
+# ============================================================================
+
+paths:
+  # Source video, used only for optional visualization overlay.
+  video: "../track1/data/raw/sample.avi"
+
+  # JSON-Lines track export produced by export_tracks.py (Component 1
+  # output). This is the only input the anomaly engine ever reads.
+  tracks_export: "data/tracks/sample.jsonl"
+
+  output_dir: "outputs"
+
+# ============================================================================
+# Logging
+# ============================================================================
+
+logging:
+  level: INFO
+
+# ============================================================================
+# Input
+# ============================================================================
+
+input:
+  # Frame rate of the recorded track export, used for reporting only —
+  # every timing computation uses the timestamps stored in the export.
+  fps: 10
+
+# ============================================================================
+# Motion History
+# ============================================================================
+
+history:
+
+  # How much per-track history is retained for windowed queries
+  # (average heading, max speed, heading variance, etc.).
+  max_history_seconds: 6.0
+
+  # Tracks moving slower than this (pixels/second) are considered
+  # stationary for the purpose of stall-duration accounting.
+  stationary_speed_threshold: 5.0
+
+# ============================================================================
+# Dominant Flow Model (used by the wrong-way detector)
+# ============================================================================
+
+flow_model:
+
+  # Size, in pixels, of each grid cell used to learn local dominant
+  # flow direction. No lane geometry is defined manually.
+  cell_size_px: 120
+
+  # Exponential-moving-average weight applied to each new observation.
+  ema_alpha: 0.05
+
+  # Minimum observations a cell must accumulate before its learned
+  # direction is considered reliable.
+  min_samples: 25
+
+  # Track motion below this speed (pixels/second) does not contribute
+  # to the learned flow (avoids noise from near-stationary jitter).
+  min_motion_speed: 10.0
+
+# ============================================================================
+# Visualization
+# ============================================================================
+
+visualization:
+
+  # How long (seconds) a track remains highlighted after triggering
+  # an anomaly event.
+  highlight_seconds: 2.0
+
+  # H.264 constant-rate-factor for the annotated output video. Lower
+  # values mean higher quality and larger files (visually lossless
+  # around 18, reasonable default at 23, smaller/lower-quality above).
+  video_crf: 23
+
+  # libx264 encoder speed/compression trade-off. Slower presets
+  # produce smaller files at the same CRF (options: ultrafast,
+  # superfast, veryfast, faster, fast, medium, slow, slower, veryslow).
+  video_preset: medium
+
+# ============================================================================
+# Anomaly Detection
+# ============================================================================
+
+anomaly:
+
+  detectors:
+    - collision
+    - near_collision
+    - stalled_vehicle
+    - sudden_stop
+    - abnormal_trajectory
+    - wrong_way
+    - vehicle_reversal
+
+  # Minimum time (seconds) between two emitted events that share the
+  # same anomaly type and track ids.
+  dedup_cooldown_seconds: 3.0
+
+  collision:
+
+    iou_threshold: 0.30
+
+    pre_impact_min_speed: 25.0
+
+    deceleration_ratio: 0.5
+
+    confirmation_window_seconds: 0.8
+
+  near_collision:
+
+    proximity_distance_px: 40.0
+
+    ttc_threshold_seconds: 1.5
+
+    closing_speed_threshold: 10.0
+
+    min_speed: 10.0
+
+  stalled_vehicle:
+
+    movement_radius_px: 15.0
+
+    stall_duration_seconds: 8.0
+
+  sudden_stop:
+
+    min_pre_stop_speed: 30.0
+
+    speed_drop_ratio: 0.6
+
+    window_seconds: 1.0
+
+  abnormal_trajectory:
+
+    heading_variance_threshold: 0.5
+
+    min_history_seconds: 1.5
+
+    min_speed: 8.0
+
+  wrong_way:
+
+    angle_threshold_degrees: 120.0
+
+    confirmation_seconds: 1.5
+
+    min_speed: 10.0
+
+  vehicle_reversal:
+
+    angle_threshold_degrees: 150.0
+
+    short_window_seconds: 0.8
+
+    long_window_seconds: 2.5
+
+    min_speed: 10.0
+
+# ============================================================================
+# Benchmark
+# ============================================================================
+
+benchmark:
+
+  enabled: false
+
+  experiment_name: null
+
+  output_directory: outputs
+
+  save_video: true
+
+  save_csv: true
+
+  save_json: true
+
+  detector_sets:
+
+    - name: all
+      detectors:
+        - collision
+        - near_collision
+        - stalled_vehicle
+        - sudden_stop
+        - abnormal_trajectory
+        - wrong_way
+        - vehicle_reversal
+
+    - name: collision_family
+      detectors:
+        - collision
+        - near_collision
+
+    - name: motion_family
+      detectors:
+        - stalled_vehicle
+        - sudden_stop
+        - abnormal_trajectory
+
+    - name: directional_family
+      detectors:
+        - wrong_way
+        - vehicle_reversal

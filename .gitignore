@@ -24,9 +24,10 @@ logs/
 .mypy_cache/
 
 # Dataset
-data/raw/
-data/interim/
-data/processed/
+**/data/raw/
+**/data/interim/
+**/data/processed/
+**/data/tracks/
 
 # Model weights
 models/*.pt

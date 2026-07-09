@@ -1,0 +1,13 @@
+numpy==2.0.2
+opencv-python==4.13.0.92
+PyYAML==6.0.3
+tabulate==0.9.0
+av==17.1.0
+
+# `av` (PyAV) provides real H.264 encoding for annotated output videos
+# via a statically bundled libx264 — OpenCV's own FFmpeg plugin has no
+# H.264 encoder available without a separately installed openh264 DLL.
+
+# export_tracks.py additionally requires Track 1's own dependencies
+# (ultralytics, torch, torchvision) since it drives Track 1's
+# detector + tracker directly. See ../track1/requirements.txt.
