@@ -1,19 +1,19 @@
 # constants.py
-#
-# Description:
-#     Project-wide constant values used across the Traffic Surveillance System.
-#
-# Note:
-#     Do NOT store configurable parameters here.
-#     Configurable values belong in config.yaml.
+# Project-wide constant values used across the Traffic Surveillance System.
 # ============================================================================
 
 from __future__ import annotations
 
-# ============================================================================
-# COCO Dataset Class IDs
-# ============================================================================
+BBOX_FORMAT_XYXY = "xyxy"
 
+SUPPORTED_VIDEO_FORMATS: tuple[str, ...] = (
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".mkv",
+)
+
+# COCO Dataset Class IDs
 COCO_CLASSES: dict[int, str] = {
     0: "person",
     1: "bicycle",
@@ -29,22 +29,4 @@ VEHICLE_CLASS_IDS: tuple[int, ...] = (
     3,  # Motorcycle
     5,  # Bus
     7,  # Truck
-)
-
-# ============================================================================
-# Bounding Box Formats
-# ============================================================================
-
-BBOX_FORMAT_XYXY = "xyxy"
-BBOX_FORMAT_XYWH = "xywh"
-
-# ============================================================================
-# Supported File Extensions
-# ============================================================================
-
-SUPPORTED_VIDEO_FORMATS: tuple[str, ...] = (
-    ".mp4",
-    ".avi",
-    ".mov",
-    ".mkv",
 )
