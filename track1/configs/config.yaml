@@ -1,5 +1,5 @@
-# ============================================================================
 # config.yaml
+
 # ============================================================================
 # Main configuration for the Traffic Surveillance System
 # ============================================================================
@@ -15,11 +15,8 @@ project:
 paths:
   video: "data/raw/sample.avi"
   default_video: "data/raw/sample.avi"
-
   model_dir: "models"
-
   homography: "data/calibration/homography.npy"
-
   output_dir: "outputs"
 
 # ============================================================================
@@ -35,11 +32,8 @@ logging:
 
 video:
   process_fps: 10
-
   display: true
-
   backend: opencv
-
   buffer_size: 1
 
 # ============================================================================
@@ -49,23 +43,14 @@ video:
 detection:
 
   algorithm: ultralytics
-
   model: "models/yolo11n.pt"
-
   confidence: 0.25
-
   iou: 0.45
-
   device: cuda
-
   classes:
-
     - car
-
     - bus
-
     - truck
-
     - motorcycle
 
 # ============================================================================
@@ -73,51 +58,28 @@ detection:
 # ============================================================================
 
 tracking:
-
   algorithm: bytetrack
-
   bytetrack:
-
     track_activation_threshold: 0.25
-
     lost_track_buffer: 30
-
     minimum_matching_threshold: 0.80
-
     frame_rate: 10
-
   deepsort:
-
     max_age: 30
-
     n_init: 3
-
     max_iou_distance: 0.70
-
     max_cosine_distance: 0.20
-
   botsort:
-
     track_high_thresh: 0.50
-
     track_low_thresh: 0.10
-
     new_track_thresh: 0.60
-
     match_thresh: 0.80
-
     track_buffer: 30
-
     fuse_score: true
-
     proximity_thresh: 0.50
-
     appearance_thresh: 0.25
-
     with_reid: false
-
     gmc_method: sparseOptFlow
-
     model: auto
 
 # ============================================================================
@@ -155,11 +117,8 @@ speed:
 benchmark:
 
   enabled: false
-
   type: detector
-
   experiment_name: null
-
   output_directory: outputs
 
   detector:
@@ -183,15 +142,10 @@ benchmark:
   trackers:
 
     - bytetrack
-
     - deepsort
-
     - botsort
 
   save_video: true
-
   save_csv: true
-
   save_json: true
-
   display: false
