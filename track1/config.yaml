@@ -87,27 +87,16 @@ tracking:
 # ============================================================================
 
 speed:
-
   algorithm: pixel
-
   pixel:
-
     smoothing_window: 5
-
   homography:
-
     smoothing_window: 5
-
   optical_flow:
-
     window_size: 15
-
     pyramid_levels: 3
-
   hybrid:
-
     homography_weight: 0.70
-
     optical_flow_weight: 0.30
 
 # ============================================================================

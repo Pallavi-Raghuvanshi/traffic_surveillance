@@ -2,8 +2,8 @@
 # Loads and provides access to the project configuration (config.yaml).
 # ============================================================================
 
-from __future__ import annotations # Stores type hints as strings
-from pathlib import Path 
+from __future__ import annotations # Stores type hints as strings instead of immediately evaluating them
+from pathlib import Path # makes handling file paths much easier
 from typing import Any 
 import yaml # converts YAML text format into standard Python dictionaries and lists
 
@@ -14,7 +14,7 @@ class Config:
     config.get(...)
     """
 
-    DEFAULT_CONFIG = ( Path(__file__).resolve().parents[2] / "configs" / "config.yaml")
+    DEFAULT_CONFIG = ( Path(__file__).resolve().parents[1] / "config.yaml")
 
     def __init__(self, config_path: str | Path | None = None) -> None: # Type hints: config_path can be string, path object 
         
