@@ -1,203 +1,80 @@
-# ============================================================================
 # faster_rcnn_detector.py
 # ============================================================================
 
 from __future__ import annotations
-
 import cv2
 import numpy as np
-import torch
-
+import torch # tensors, GPU, Inference, models
 from PIL import Image
 
 from torchvision.models.detection import (
-    FasterRCNN_ResNet50_FPN_Weights,
-    fasterrcnn_resnet50_fpn,
+    FasterRCNN_ResNet50_FPN_Weights, # pretrained weights
+    fasterrcnn_resnet50_fpn, # model architecture
 )
 
 from core.config import Config
-from core.schemas import BoundingBox
-from core.schemas import Detection
-
+from core.schemas import BoundingBox, Detection
 from detection.base_detector import BaseDetector
 
-
 class FasterRCNNDetector(BaseDetector):
-    """
-    Wrapper around TorchVision Faster R-CNN.
-    """
 
-    def __init__(
-        self,
-        config: Config,
-    ) -> None:
+    # Initialize the detector
+    def __init__(self, config: Config) -> None:
 
-        detection_cfg = config[
-            "detection"
-        ]
+        detection_cfg = config["detection"]
+        self._confidence = detection_cfg["confidence"] # ignores detections below it
+        self._device = torch.device(detection_cfg["device"]) # later runs automatically with torch.device()
+        self._allowed_classes = {class_name.lower() for class_name in detection_cfg["classes"]}
 
-        self._confidence = detection_cfg[
-            "confidence"
-        ]
+        weights = FasterRCNN_ResNet50_FPN_Weights.DEFAULT
+        self._transforms = weights.transforms() # preprocessing pipeline
+        self._model = fasterrcnn_resnet50_fpn(weights=weights).to(self._device).eval()
+        self._class_names = weights.meta["categories"]
 
-        self._device = torch.device(
-            detection_cfg[
-                "device"
-            ]
-        )
+    # detects objects in one frame  
+    def detect(self, frame: np.ndarray) -> list[Detection]:
+        
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        # Numpy array -> PIL image 
+        image = Image.fromarray(rgb) 
+        image = self._transforms(image).to(self._device) 
+        # transformed image moved to the same device as the model
 
-        self._allowed_classes = {
+        with torch.no_grad(): # disable gradient
+            prediction = self._model([image])[0]
+        detections = []
 
-            class_name.lower()
+        # Process each detection
+        for box, score, label in zip(prediction["boxes"], prediction["scores"], prediction["labels"]):
 
-            for class_name in detection_cfg[
-                "classes"
-            ]
-        }
-
-        weights = (
-            FasterRCNN_ResNet50_FPN_Weights.DEFAULT
-        )
-
-        self._transforms = (
-            weights.transforms()
-        )
-
-        self._model = (
-
-            fasterrcnn_resnet50_fpn(
-                weights=weights
-            )
-
-            .to(self._device)
-
-            .eval()
-        )
-
-        self._class_names = weights.meta[
-            "categories"
-        ]
-
-    # ------------------------------------------------------------------ #
-    # Detection
-    # ------------------------------------------------------------------ #
-
-    def detect(
-        self,
-        frame: np.ndarray,
-    ) -> list[Detection]:
-
-        rgb = cv2.cvtColor(
-
-            frame,
-
-            cv2.COLOR_BGR2RGB,
-        )
-
-        image = Image.fromarray(
-            rgb
-        )
-
-        image = self._transforms(
-            image
-        ).to(
-            self._device
-        )
-
-        with torch.no_grad():
-
-            prediction = self._model(
-                [image]
-            )[0]
-
-        detections: list[
-            Detection
-        ] = []
-
-        for box, score, label in zip(
-
-            prediction["boxes"],
-
-            prediction["scores"],
-
-            prediction["labels"],
-        ):
-
-            score = float(
-                score.item()
-            )
-
+            score = float(score.item())
             if score < self._confidence:
-
                 continue
 
-            label = int(
-                label.item()
-            )
+            label = int(label.item())
+            class_name = self._class_names[label].lower()
 
-            class_name = (
-
-                self._class_names[label]
-
-                if label < len(
-                    self._class_names
-                )
-
-                else str(label)
-
-            ).lower()
-
-            if (
-
-                class_name
-
-                not in self._allowed_classes
-
-            ):
-
+            if class_name not in self._allowed_classes:
                 continue
 
-            x1, y1, x2, y2 = (
-
-                box.cpu()
-                .numpy()
-            )
+            x1, y1, x2, y2 = (box.cpu().numpy())
 
             detections.append(
-
                 Detection(
-
                     bbox=BoundingBox(
-
                         x1=float(x1),
-
                         y1=float(y1),
-
                         x2=float(x2),
-
                         y2=float(y2),
                     ),
-
                     confidence=score,
-
                     class_id=label,
-
                     class_name=class_name,
                 )
             )
-
+            
         return detections
 
-    # ------------------------------------------------------------------ #
-    # Reset
-    # ------------------------------------------------------------------ #
-
-    def reset(
-        self,
-    ) -> None:
-
-        """
-        Stateless detector.
-        """
-
+    def reset(self) -> None:
+        """Stateless detector"""
         pass

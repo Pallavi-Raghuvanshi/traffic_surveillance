@@ -3,14 +3,11 @@
 # ============================================================================
 
 from __future__ import annotations
-
 from pathlib import Path
-
 import cv2
 import numpy as np
 
 from core.schemas import Detection
-
 
 class BenchmarkVisualizer:
     """
@@ -35,20 +32,8 @@ class BenchmarkVisualizer:
     ) -> None:
 
         self.detector_name = detector_name
-
-        fourcc = cv2.VideoWriter_fourcc(
-            *"mp4v"
-        )
-
-        self.writer = cv2.VideoWriter(
-            str(output_video),
-            fourcc,
-            fps,
-            (
-                frame_width,
-                frame_height,
-            ),
-        )
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        self.writer = cv2.VideoWriter(str(output_video), fourcc, fps, (frame_width, frame_height))
 
     def draw(
         self,
@@ -142,15 +127,8 @@ class BenchmarkVisualizer:
 
         return output
 
-    def write(
-        self,
-        frame: np.ndarray,
-    ) -> None:
-
+    def write(self, frame: np.ndarray) -> None:
         self.writer.write(frame)
 
-    def close(
-        self,
-    ) -> None:
-
+    def close(self) -> None:
         self.writer.release()

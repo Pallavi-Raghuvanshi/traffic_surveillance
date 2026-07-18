@@ -43,10 +43,11 @@ video:
 detection:
 
   algorithm: ultralytics
+  backend: yolo # Supported: yolo | rtdetr
   model: "models/yolo11n.pt"
-  confidence: 0.25
-  iou: 0.45
-  device: cuda
+  iou: 0.45 # used only for yolo
+  confidence: 0.25 
+  device: cuda 
   classes:
     - car
     - bus
@@ -58,17 +59,21 @@ detection:
 # ============================================================================
 
 tracking:
+
   algorithm: bytetrack
+
   bytetrack:
     track_activation_threshold: 0.25
     lost_track_buffer: 30
     minimum_matching_threshold: 0.80
     frame_rate: 10
+
   deepsort:
     max_age: 30
     n_init: 3
     max_iou_distance: 0.70
     max_cosine_distance: 0.20
+    
   botsort:
     track_high_thresh: 0.50
     track_low_thresh: 0.10

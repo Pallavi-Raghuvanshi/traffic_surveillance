@@ -15,7 +15,7 @@ class VideoMetadata:
     codec: str
 
 @dataclass(frozen=True, slots=True) # frozen=True -> objects become immutable, slots=True -> fixed memory allocated for object
-class BoundingBox:
+class BoundingBox: # Format: xyxy / xywh
     x1: float
     y1: float
     x2: float

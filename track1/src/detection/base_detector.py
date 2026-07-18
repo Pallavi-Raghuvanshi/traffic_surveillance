@@ -3,13 +3,14 @@
 # ============================================================================
 
 from __future__ import annotations
-from abc import ABC # Abstract Base Class
-from abc import abstractmethod
+from abc import abstractmethod, ABC # Abstract Base Class
 import numpy as np
+
 from core.schemas import Detection
 
 class BaseDetector(ABC):
-    @abstractmethod
+
+    @abstractmethod # forces child classes to implement the method
     def detect(self, frame: np.ndarray) -> list[Detection]:
         """Detect objects in a single image"""
 

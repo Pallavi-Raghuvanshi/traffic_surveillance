@@ -1,91 +1,25 @@
-# ============================================================================
 # base_tracker.py
 # ============================================================================
 
 from __future__ import annotations
-
-from abc import ABC
-from abc import abstractmethod
-
+from abc import ABC, abstractmethod
 import numpy as np
 
 from core.schemas import Detection
 from core.schemas import Track
 
-
 class BaseTracker(ABC):
-    """
-    Abstract interface for all multi-object trackers.
-
-    Every tracker implementation must convert detector outputs
-    into standardized Track objects.
-
-    Examples
-    --------
-    - ByteTrack
-    - DeepSORT
-    - BoT-SORT
-    - OC-SORT
-    """
-
-    # ------------------------------------------------------------------ #
-    # Tracking
-    # ------------------------------------------------------------------ #
 
     @abstractmethod
-    def update(
-        self,
-        detections: list[Detection],
-        frame: np.ndarray | None = None,
-    ) -> list[Track]:
-        """
-        Update the tracker using detections from the current frame.
-
-        Parameters
-        ----------
-        detections
-            Detector output for the current frame.
-
-        frame
-            Current video frame. Some trackers
-            (e.g. DeepSORT, BoT-SORT) require image
-            information for appearance features.
-
-        Returns
-        -------
-        list[Track]
-            Active tracks after the update.
-        """
-
-        raise NotImplementedError
-
-    # ------------------------------------------------------------------ #
-    # State Management
-    # ------------------------------------------------------------------ #
+    def update(self, detections: list[Detection], frame: np.ndarray | None = None) -> list[Track]:
+        """Update tracker using current frame's detections."""
 
     @abstractmethod
-    def reset(
-        self,
-    ) -> None:
-        """
-        Reset the tracker before processing
-        a new video sequence.
-        """
-
-        raise NotImplementedError
-
-    # ------------------------------------------------------------------ #
-    # Properties
-    # ------------------------------------------------------------------ #
+    def reset(self) -> None:
+        """Reset the tracker before processing a new video sequence."""
+        pass
 
     @property
     @abstractmethod
-    def active_tracks(
-        self,
-    ) -> list[Track]:
-        """
-        Currently active tracks maintained
-        by the tracker.
-        """
-
-        raise NotImplementedError
+    def active_tracks(self) -> list[Track]:
+        """Currently active tracks maintained by the tracker."""
