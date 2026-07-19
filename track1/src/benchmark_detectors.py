@@ -39,22 +39,24 @@ class DetectorBenchmark:
         for detector_cfg in benchmark_cfg["detectors"]:
 
             algorithm = detector_cfg["algorithm"]
-            
+            backend = detector_cfg.get("backend")
             model = detector_cfg["model"]
+
             if model is None:
-                experiment_name = algorithm
+                experiment_name = backend if backend else algorithm
             else:
                 experiment_name = Path(model).stem
 
             print()
             print("=" * 70)
-            print(
-                f"Benchmarking : "
-                f"{algorithm} "
-                f"({experiment_name})"
-            )
+            if backend:
+                print(f"Benchmarking : {backend.upper()} ({experiment_name})")
+            else:
+                print(f"Benchmarking : {algorithm} ({experiment_name})")
             print("=" * 70)
+            
             self.config["detection"]["algorithm"] = algorithm
+            self.config["detection"]["backend"] = backend
             self.config["detection"]["model"] = model
             benchmark_cfg["experiment_name"] = experiment_name
             summary = main(self.config)
@@ -113,7 +115,6 @@ class DetectorBenchmark:
         table: list[list[str | int]] = []
 
         for rank, (detector, summary) in enumerate(ranking, start=1):
-
             table.append(
                 [
                     rank,
