@@ -13,12 +13,11 @@ from pathlib import Path
 from typing import Iterator # iterator can be returned as a type hint
 import cv2
 import numpy as np # since OpenCV stores every frame as a numpy array
-from core.logger import get_logger
-from core.schemas import VideoMetadata
 
+from src.core.logger import get_logger
+from src.core.schemas import VideoMetadata
 
 logger = get_logger(__name__)
-
 
 class VideoLoader:
     """Every downstream module receives frames exclusively through this class"""
@@ -107,7 +106,7 @@ class VideoLoader:
         return self._current_frame
 
     @property
-    def metadata(self) -> VideoMetadata:
+    def metadata(self) -> VideoMetadata: # shown automatically when video is read using VideoLoader()
         return VideoMetadata(
             filename=self.video_path.name,
             width=self._width,
@@ -181,12 +180,15 @@ class VideoLoader:
     # Context Manager
     # ------------------------------------------------------------------ #
 
-    def __enter__(self) -> "VideoLoader":
-        """when entering with block"""
+    def __enter__(self) -> "VideoLoader": 
+        """
+        when entering 'with' block
+        e.g. with VideoLoader(video_path) as video_loader:
+        """
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
-        """When leaving with block"""
+        """When leaving 'with' block"""
         self.release()
 
     # ------------------------------------------------------------------ #

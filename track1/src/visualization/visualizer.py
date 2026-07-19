@@ -8,7 +8,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from core.schemas import Track
+from src.core.schemas import Track
 
 class Visualizer:
 
@@ -18,17 +18,17 @@ class Visualizer:
         show_labels: bool = True,
         # show_speed: bool = True,
         show_track_id: bool = True,
-        output_video: str | Path | None = None,
-        fps: float | None = None,
-        frame_width: int | None = None,
-        frame_height: int | None = None,
+        output_video: str | Path,
+        fps: float ,
+        frame_width: int,
+        frame_height: int,
     ) -> None:
 
         # self.show_speed = show_speed
         self.show_labels = show_labels
         self.show_track_id = show_track_id 
-        output_video = Path(output_video)
         output_video.parent.mkdir(parents=True, exist_ok=True)
+        output_video = Path(output_video)
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
         self._writer = cv2.VideoWriter(str(output_video), fourcc, fps, (frame_width, frame_height))
@@ -60,7 +60,7 @@ class Visualizer:
                 output,
                 (x1, y1),
                 (x2, y2),
-                (0, 255, 0),
+                (0, 0, 0),
                 2,
             )
 
@@ -109,6 +109,12 @@ class Visualizer:
             )
 
         return output
+    
+    def show(self, frame, window_name: str = "Traffic Surveillance") -> bool:
+        cv2.imshow(window_name, frame)
+        # Press q to exit
+        key = cv2.waitKey(1) & 0xFF
+        return key != ord("q")
 
     def write(self, frame: np.ndarray) -> None:
         self._writer.write(frame)

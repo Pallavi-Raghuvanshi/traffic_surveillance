@@ -5,10 +5,10 @@ from __future__ import annotations
 import numpy as np
 import supervision as sv
 
-from core.config import Config
-from core.schemas import BoundingBox, Detection, Track
+from src.core.config import Config
+from src.core.schemas import BoundingBox, Detection, Track
 
-from tracking.base_tracker import BaseTracker
+from src.tracking.base_tracker import BaseTracker
 
 class ByteTrackTracker(BaseTracker):
 
@@ -29,7 +29,7 @@ class ByteTrackTracker(BaseTracker):
     def active_tracks(self) -> list[Track]:
         return self._active_tracks
 
-    def update(self, detections: list[Detection], frame: np.ndarray | None = None) -> list[Track]:
+    def update(self, detections: list[Detection]) -> list[Track]:
 
         if not detections:
             self._active_tracks.clear()

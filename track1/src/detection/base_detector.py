@@ -6,7 +6,7 @@ from __future__ import annotations
 from abc import abstractmethod, ABC # Abstract Base Class
 import numpy as np
 
-from core.schemas import Detection
+from src.core.schemas import Detection
 
 class BaseDetector(ABC):
 

@@ -5,8 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import numpy as np
 
-from core.schemas import Detection
-from core.schemas import Track
+from src.core.schemas import Detection
+from src.core.schemas import Track
 
 class BaseTracker(ABC):
 

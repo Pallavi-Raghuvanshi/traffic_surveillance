@@ -16,9 +16,9 @@ class Config:
 
     DEFAULT_CONFIG = ( Path(__file__).resolve().parents[1] / "config.yaml")
 
-    def __init__(self, config_path: str | Path | None = None) -> None: # Type hints: config_path can be string, path object 
+    def __init__(self) -> None: # Type hints: config_path can be string, path object 
         
-        self._config_path = self._resolve_path(config_path)
+        self._config_path = self._resolve_path("config.yaml")
         
         if not self._config_path.exists():
             raise FileNotFoundError(f"Configuration file not found:\n {self._config_path}")

@@ -2,16 +2,16 @@
 # ============================================================================
 
 from __future__ import annotations
-from core.config import Config
+from src.core.config import Config
 
-from input.video_loader import VideoLoader
+from src.input.video_loader import VideoLoader
 
-from detection.ultralytics_detector import UltralyticsDetector
-from detection.faster_rcnn_detector import FasterRCNNDetector
+from src.detection.ultralytics_detector import UltralyticsDetector
+from src.detection.faster_rcnn_detector import FasterRCNNDetector
 
-from tracking.bytetrack_tracker import ByteTrackTracker
-from tracking.deepsort_tracker import DeepSORTTracker
-from tracking.botsort_tracker import BoTSORTTracker
+from src.tracking.bytetrack_tracker import ByteTrackTracker
+from src.tracking.deepsort_tracker import DeepSORTTracker
+from src.tracking.botsort_tracker import BoTSORTTracker
 
 # from speed import TrajectoryManager
 # from speed.pixel_speed_estimator import PixelSpeedEstimator
@@ -21,14 +21,14 @@ from tracking.botsort_tracker import BoTSORTTracker
 
 # from calibration.homography import Homography
 
-from evaluation.benchmark_summary import BenchmarkSummary
-from evaluation.metrics import Metrics
-from evaluation.metrics_exporter import MetricsExporter
-from evaluation.evaluator import Evaluator
+from src.evaluation.benchmark_summary import BenchmarkSummary
+from src.evaluation.metrics import Metrics
+from src.evaluation.metrics_exporter import MetricsExporter
+from src.evaluation.evaluator import Evaluator
 
-from visualization.visualizer import Visualizer
-from pipeline import Pipeline
-from utils.file_utils import video_output_path, csv_output_path, json_output_path
+from src.visualization.visualizer import Visualizer
+from src.pipeline import Pipeline
+from src.utils.file_utils import video_output_path, csv_output_path, json_output_path
 
 class ExperimentRunner:
     
@@ -91,23 +91,21 @@ class ExperimentRunner:
         
         # Benchmark Configuration
         benchmark_cfg = self.config["benchmark"]
-        benchmark_enabled = benchmark_cfg.get("enabled", False)
+        # benchmark_enabled = benchmark_cfg.get("enabled", False)
         benchmark_type = benchmark_cfg.get("type")
         experiment_name = benchmark_cfg.get("experiment_name")
 
         # Visualizer
-        if benchmark_enabled:
-            visualizer = Visualizer(
-                output_video=video_output_path(
-                    benchmark_cfg["output_directory"], 
-                    benchmark_type, 
-                    experiment_name),
-                fps=video_loader.fps,
-                frame_width=video_loader.width,
-                frame_height=video_loader.height,
-            )
-        else:
-            visualizer = Visualizer()
+        # if benchmark_enabled:
+        visualizer = Visualizer(
+            output_video=video_output_path(
+                benchmark_cfg["output_directory"], 
+                benchmark_type, 
+                experiment_name),
+            fps=video_loader.fps,
+            frame_width=video_loader.width,
+            frame_height=video_loader.height,
+        )
 
         # Pipeline
         pipeline = Pipeline(
@@ -127,19 +125,19 @@ class ExperimentRunner:
             video_loader.release() # runs even if pipeline fails
 
         # Export 
-        if benchmark_enabled: # exporting results in only json format for now, cdsv can also be generated
-            metrics_exporter.export(
-                summary, 
-                # csv_path=csv_output_path(
-                #     benchmark_cfg["output_directory"], 
-                #     benchmark_type, 
-                #     experiment_name,
-                # ),
-                json_path=json_output_path(
-                    benchmark_cfg["output_directory"],
-                    benchmark_type,
-                    experiment_name,
-                ),
-            )
+        # exporting results in only json format for now, cdsv can also be generated
+        metrics_exporter.export(
+            summary, 
+            # csv_path=csv_output_path(
+            #     benchmark_cfg["output_directory"], 
+            #     benchmark_type, 
+            #     experiment_name,
+            # ),
+            json_path=json_output_path(
+                benchmark_cfg["output_directory"],
+                benchmark_type,
+                experiment_name,
+            ),
+        )
 
         return summary

@@ -6,7 +6,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-from evaluation.benchmark_summary import BenchmarkSummary
+from src.evaluation.benchmark_summary import BenchmarkSummary
 
 @dataclass(slots=True) 
 class FrameMetrics: # for one frame

@@ -6,8 +6,8 @@
 from __future__ import annotations
 from statistics import mean
 
-from core.schemas import Detection, Track
-from evaluation.benchmark_summary import BenchmarkSummary
+from src.core.schemas import Detection, Track
+from src.evaluation.benchmark_summary import BenchmarkSummary
 
 class Evaluator:
 

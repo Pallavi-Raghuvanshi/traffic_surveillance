@@ -7,12 +7,12 @@ import numpy as np
 from ultralytics.trackers.bot_sort import BOTSORT
 
 # Standardized Project Models
-from core.config import Config
-from core.schemas import BoundingBox, Detection, Track
+from src.core.config import Config
+from src.core.schemas import BoundingBox, Detection, Track
 
-from tracking.base_tracker import BaseTracker
-# from tracking.botsort.config import build_botsort_args
-from tracking.ultralytics_results_adapter import TrackingResults
+from src.tracking.base_tracker import BaseTracker
+from src.tracking.botsort.config import build_botsort_args
+from src.tracking.ultralytics_results_adapter import TrackingResults
 
 class BoTSORTTracker(BaseTracker):
 

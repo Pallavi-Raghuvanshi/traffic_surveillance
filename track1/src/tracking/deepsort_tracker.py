@@ -6,10 +6,10 @@ import numpy as np
 
 from deep_sort_realtime.deepsort_tracker import DeepSort
 
-from core.config import Config
-from core.schemas import BoundingBox, Detection, Track
+from src.core.config import Config
+from src.core.schemas import BoundingBox, Detection, Track
 
-from tracking.base_tracker import BaseTracker
+from src.tracking.base_tracker import BaseTracker
 
 class DeepSORTTracker(BaseTracker):
 

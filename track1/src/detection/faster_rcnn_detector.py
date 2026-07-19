@@ -12,9 +12,9 @@ from torchvision.models.detection import (
     fasterrcnn_resnet50_fpn, # model architecture
 )
 
-from core.config import Config
-from core.schemas import BoundingBox, Detection
-from detection.base_detector import BaseDetector
+from src.core.config import Config
+from src.core.schemas import BoundingBox, Detection
+from src.detection.base_detector import BaseDetector
 
 class FasterRCNNDetector(BaseDetector):
 

@@ -9,7 +9,7 @@ import csv
 import json
 from pathlib import Path
 
-from evaluation.benchmark_summary import BenchmarkSummary
+from src.evaluation.benchmark_summary import BenchmarkSummary
 
 class MetricsExporter:
 

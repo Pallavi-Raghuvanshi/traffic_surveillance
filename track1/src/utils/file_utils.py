@@ -33,7 +33,7 @@ def experiment_directory(
         tracker_benchmark/
             bytetrack/
     """
-    return ensure_directory(Path(output_root)/ f"{benchmark_type.lower()}_benchmark"/ experiment_name)
+    return ensure_directory(f"{Path(output_root)}/{benchmark_type.lower()}_benchmark/{experiment_name}")
 
 
 # ------------------------------------------------------------------ #
@@ -45,7 +45,7 @@ def video_output_path(
     benchmark_type: str,
     experiment_name: str,
 ) -> Path:
-    return (experiment_directory(output_root, benchmark_type, experiment_name) / "annotated.mp4")
+    return (experiment_directory(output_root, benchmark_type, experiment_name)/ "annotated.mp4")
 
 def csv_output_path(
     output_root: str | Path,

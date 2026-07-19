@@ -11,7 +11,7 @@ from tabulate import tabulate
 
 from core.config import Config
 from evaluation.benchmark_summary import BenchmarkSummary
-from main import main
+from track1.main import main
 from utils.file_utils import benchmark_csv_path
 
 class DetectorBenchmark:
@@ -124,7 +124,7 @@ class DetectorBenchmark:
                     f"{summary.average_processing_time_ms:.2f}",
                     f"{summary.average_detections:.2f}",
                     f"{summary.average_tracks:.2f}",
-                    f"{summary.average_speed:.2f}",
+                    # f"{summary.average_speed:.2f}",
                 ]
             )
         print()

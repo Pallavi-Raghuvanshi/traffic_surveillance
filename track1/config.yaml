@@ -14,7 +14,7 @@ project:
 
 paths:
   video: "data/raw/sample.avi"
-  default_video: "data/raw/sample.avi"
+  output_video: "outputs/video.mp4"
   model_dir: "models"
   homography: "data/calibration/homography.npy"
   output_dir: "outputs"
@@ -47,7 +47,7 @@ detection:
   model: "models/yolo11n.pt"
   iou: 0.45 # used only for yolo
   confidence: 0.25 
-  device: cuda 
+  device: cpu 
   classes:
     - car
     - bus

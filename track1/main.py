@@ -10,19 +10,19 @@ warnings.filterwarnings(
     message=r".*ByteTrack.*deprecated.*",
 )
 
-from core.config import Config
-from core.logger import get_logger
+from src.core.config import Config
+from src.core.logger import get_logger
 
-from evaluation.benchmark_summary import BenchmarkSummary
-from experiments import ExperimentRunner
+from src.evaluation.benchmark_summary import BenchmarkSummary
+from src.experiments import ExperimentRunner
 
 logger = get_logger(__name__)
 
-def main(config: Config | None = None) -> BenchmarkSummary:
+def main() -> BenchmarkSummary:
     logger.info("Traffic Surveillance Started")
     try:
-        if config is None:
-            config = Config()
+        
+        config = Config()
         runner = ExperimentRunner(config)
         summary = runner.run()
         logger.info("Traffic Surveillance Finished")

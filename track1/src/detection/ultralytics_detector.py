@@ -5,10 +5,9 @@ from __future__ import annotations
 import numpy as np
 from ultralytics import YOLO, RTDETR
 
-from core.config import Config
-from core.schemas import BoundingBox, Detection
-from detection.base_detector import BaseDetector
-
+from src.core.config import Config
+from src.core.schemas import BoundingBox, Detection
+from src.detection.base_detector import BaseDetector
 
 class UltralyticsDetector(BaseDetector):
     """
@@ -71,10 +70,11 @@ class UltralyticsDetector(BaseDetector):
                 detections.append(
                     Detection(
                         bbox=BoundingBox(
-                            x1=float(xyxy[0]),  # left
-                            y1=float(xyxy[1]),  # top
-                            x2=float(xyxy[2]),  # right
-                            y2=float(xyxy[3])), # bottom
+                            x1=float(f"{xyxy[0]:.3f}"),  # left
+                            y1=float(f"{xyxy[1]:.3f}"),  # top
+                            x2=float(f"{xyxy[2]:.3f}"),  # right
+                            y2=float(f"{xyxy[3]:.3f}"),  # bottom
+                        ),
                         confidence=float(box.conf.item()),
                         class_id=class_id,
                         class_name=class_name,

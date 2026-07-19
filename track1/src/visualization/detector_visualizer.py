@@ -9,7 +9,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from core.schemas import Detection
+from src.core.schemas import Detection
 
 class BenchmarkVisualizer:
     """
@@ -36,7 +36,7 @@ class BenchmarkVisualizer:
         output_video.parent.mkdir(parents=True, exist_ok=True)
 
         self.writer = cv2.VideoWriter(str(output_video), fourcc, fps, (frame_width, frame_height))
-        if not self._writer.isOpened():
+        if not self.writer.isOpened():
             raise RuntimeError(f"Unable to create output video: {output_video}")
 
     def draw(
@@ -66,22 +66,19 @@ class BenchmarkVisualizer:
                 output,
                 (x1, y1),
                 (x2, y2),
-                (0, 255, 0), # Green bounding box
+                (255, 0, 18), # Green bounding box
                 2, # thickness
             )
 
-            label = (
-                f"{detection.class_name} "
-                f"{detection.confidence:.2f}"
-            )
+            label = f"{detection.class_name},{detection.confidence:.2f}"
 
             cv2.putText(
                 output, # copied frame
-                " | ".join(label),
+                " | ".join(label.split(",")),
                 (x1, y1 - 8), # label appears 8 pixels above the bounding box
                 cv2.FONT_HERSHEY_SIMPLEX, # font style
                 0.5, # font scale
-                (0, 255, 0),
+                (0, 0, 0),
                 2, # thickness (in pixels)
             )
 
@@ -95,7 +92,7 @@ class BenchmarkVisualizer:
             (20, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
-            (0, 255, 255),
+            (0, 0, 0),
             2,
         )
 
@@ -105,19 +102,19 @@ class BenchmarkVisualizer:
             (20, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
-            (255, 255, 0),
+            (0, 0, 80),
             2,
         )
 
-        cv2.putText(
-            output,
-            f"FPS : {fps:.2f}",
-            (20, 90),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (255, 255, 0),
-            2,
-        )
+        # cv2.putText(
+        #     output,
+        #     f"FPS : {fps:.2f}",
+        #     (20, 90),
+        #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     0.7,
+        #     (255, 255, 0),
+        #     2,
+        # )
 
         cv2.putText(
             output,
@@ -125,7 +122,7 @@ class BenchmarkVisualizer:
             (20, 120),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
-            (255, 255, 0),
+            (0, 0, 80),
             2,
         )
 

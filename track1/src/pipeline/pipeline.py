@@ -5,11 +5,11 @@
 from __future__ import annotations
 import time # for measuring execution time
 
-from core.logger import get_logger
+from src.core.logger import get_logger
 
-from evaluation.benchmark_summary import BenchmarkSummary
-from evaluation.evaluator import Evaluator
-from evaluation.metrics import Metrics
+from src.evaluation.benchmark_summary import BenchmarkSummary
+from src.evaluation.evaluator import Evaluator
+from src.evaluation.metrics import Metrics
 
 logger = get_logger(__name__)
 
@@ -65,7 +65,7 @@ class Pipeline:
             
             start_time = time.perf_counter() # time counted from a randome state
             detections = self.detector.detect(frame)
-            tracks = self.tracker.update(detections, frame)
+            tracks = self.tracker.update(detections)
             # self.trajectory_manager.update(tracks)
             # speeds: list[float] = []
             # speed_map: dict[int, float] = {}
@@ -79,15 +79,16 @@ class Pipeline:
             processing_time = time.perf_counter() - start_time
             fps = 1.0 / processing_time if processing_time > 0 else 0.0
 
-            annotated_frame = (
-                self.visualizer.draw_tracks(
+            annotated_frame = self.visualizer.draw_tracks(
                     frame=frame,
                     tracks=tracks,
                     # speeds=speed_map,
                     fps=fps,
                     frame_number=frame_number,
                 )
-            )
+
+            if frame_number%500 == 0:
+                logger.info(f"{frame_number} Frames processed")
 
             # Visualization
             self.visualizer.write(annotated_frame)
