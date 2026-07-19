@@ -43,6 +43,6 @@ outputs/
 # Environment variables
 .env
 deep-person-reid
-
+track1/Pipelines.md
 .claude/
 caliberation/
