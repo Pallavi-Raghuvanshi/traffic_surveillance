@@ -22,7 +22,7 @@ class TrackerBenchmark:
     """
 
     def __init__(self) -> None:
-        self.config = Config()
+        self.config = Config("config.yaml")
         self.results: list[tuple[str, BenchmarkSummary]] = []
 
     def run(self) -> None:

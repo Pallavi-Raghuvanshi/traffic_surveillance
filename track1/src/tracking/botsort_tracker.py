@@ -11,7 +11,7 @@ from core.config import Config
 from core.schemas import BoundingBox, Detection, Track
 
 from tracking.base_tracker import BaseTracker
-from tracking.botsort.config import build_botsort_args
+# from tracking.botsort.config import build_botsort_args
 from tracking.ultralytics_results_adapter import TrackingResults
 
 class BoTSORTTracker(BaseTracker):

@@ -26,7 +26,7 @@ class DetectorBenchmark:
     """
 
     def __init__(self) -> None:
-        self.config = Config()
+        self.config = Config("config.yaml")
         self.results: list[tuple[str, BenchmarkSummary]] = []
 
     # Run
@@ -40,6 +40,7 @@ class DetectorBenchmark:
 
             algorithm = detector_cfg["algorithm"]
             backend = detector_cfg.get("backend")
+            print('=====================backend: ', backend)
             model = detector_cfg["model"]
 
             if model is None:
@@ -54,7 +55,7 @@ class DetectorBenchmark:
             else:
                 print(f"Benchmarking : {algorithm} ({experiment_name})")
             print("=" * 70)
-            
+
             self.config["detection"]["algorithm"] = algorithm
             self.config["detection"]["backend"] = backend
             self.config["detection"]["model"] = model

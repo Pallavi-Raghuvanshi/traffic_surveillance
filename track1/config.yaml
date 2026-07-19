@@ -117,17 +117,21 @@ benchmark:
 
   detector:
     algorithm: ultralytics
+    backend: yolo
     model: models/yolo11n.pt
 
   detectors:
 
     - algorithm: ultralytics
+      backend: yolo
       model: models/yolo11n.pt
 
     - algorithm: ultralytics
+      backend: yolo
       model: models/yolo26n.pt
 
-    - algorithm: rtdetr
+    - algorithm: ultralytics
+      backend: rtdetr
       model: models/rtdetr-l.pt
 
     - algorithm: faster_rcnn
