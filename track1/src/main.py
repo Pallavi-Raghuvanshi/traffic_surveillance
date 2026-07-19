@@ -2,6 +2,13 @@
 # ============================================================================
 
 from __future__ import annotations
+import warnings
+
+warnings.filterwarnings(
+    "ignore",
+    category=FutureWarning,
+    message=r".*ByteTrack.*deprecated.*",
+)
 
 from core.config import Config
 from core.logger import get_logger

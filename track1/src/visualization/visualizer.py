@@ -76,7 +76,7 @@ class Visualizer:
             cv2.putText(
                 output, 
                 " | ".join(label),
-                x1, max(20, y1 - 10),
+                (x1, max(20, y1 - 10)),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 (0, 255, 0),

@@ -40,7 +40,6 @@ class DetectorBenchmark:
 
             algorithm = detector_cfg["algorithm"]
             backend = detector_cfg.get("backend")
-            print('=====================backend: ', backend)
             model = detector_cfg["model"]
 
             if model is None:
