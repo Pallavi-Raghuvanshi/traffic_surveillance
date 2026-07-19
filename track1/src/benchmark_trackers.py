@@ -36,9 +36,9 @@ class TrackerBenchmark:
 
         for tracker in benchmark_cfg["trackers"]:
             print()
-            print("=" * 70)
+            print("=" * 90)
             print(f"Benchmarking : {tracker}")
-            print("=" * 70)
+            print("=" * 90)
             self.config["tracking"]["algorithm"] = tracker
             benchmark_cfg["experiment_name"] = tracker
             summary = main(self.config)

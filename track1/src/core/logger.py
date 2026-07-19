@@ -18,8 +18,8 @@ def get_logger(name: str) -> logging.Logger:
             level=logging.INFO, # INFO, ERROR, DEBUG, CRITICAL
             format=(
                 "%(asctime)s | " # 2026-07-14 15:30:21
-                "%(levelname)s-8s | " # variable values substituted only when logger called
-                "%(name)s-20s | "
+                "%(levelname)-8s | " # variable values substituted only when logger called
+                "%(name)-20s | "
                 "%(message)s" # logger.info("Pipeline started") -> Pipeline started
             ),
         )
