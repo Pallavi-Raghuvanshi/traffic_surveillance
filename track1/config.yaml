@@ -111,7 +111,7 @@ speed:
 benchmark:
 
   enabled: false
-  type: detector
+  type: detector 
   experiment_name: null
   output_directory: outputs
 

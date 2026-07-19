@@ -12,9 +12,7 @@ from experiments import ExperimentRunner
 logger = get_logger(__name__)
 
 def main(config: Config | None = None) -> BenchmarkSummary:
-
     logger.info("Traffic Surveillance Started")
-
     try:
         if config is None:
             config = Config()
@@ -22,7 +20,6 @@ def main(config: Config | None = None) -> BenchmarkSummary:
         summary = runner.run()
         logger.info("Traffic Surveillance Finished")
         return summary
-
     except Exception:
         logger.exception("Traffic Surveillance Failed.")
         raise

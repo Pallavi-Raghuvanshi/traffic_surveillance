@@ -1,5 +1,7 @@
 # ============================================================================
-# benchmark_visualizer.py
+# detector_visualizer.py
+# ============================================================================
+# Visualizer used during detector benchmarking
 # ============================================================================
 
 from __future__ import annotations
@@ -11,8 +13,6 @@ from core.schemas import Detection
 
 class BenchmarkVisualizer:
     """
-    Visualizer used during detector benchmarking.
-
     Responsibilities
     ----------------
     • Draw detections
@@ -33,7 +33,11 @@ class BenchmarkVisualizer:
 
         self.detector_name = detector_name
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        output_video.parent.mkdir(parents=True, exist_ok=True)
+
         self.writer = cv2.VideoWriter(str(output_video), fourcc, fps, (frame_width, frame_height))
+        if not self._writer.isOpened():
+            raise RuntimeError(f"Unable to create output video: {output_video}")
 
     def draw(
         self,
@@ -41,7 +45,7 @@ class BenchmarkVisualizer:
         detections: list[Detection],
         fps: float,
         frame_number: int,
-    ) -> np.ndarray:
+    ) -> np.ndarray: # annotated frame
 
         output = frame.copy()
 
@@ -62,8 +66,8 @@ class BenchmarkVisualizer:
                 output,
                 (x1, y1),
                 (x2, y2),
-                (0, 255, 0),
-                2,
+                (0, 255, 0), # Green bounding box
+                2, # thickness
             )
 
             label = (
@@ -72,13 +76,13 @@ class BenchmarkVisualizer:
             )
 
             cv2.putText(
-                output,
-                label,
-                (x1, y1 - 8),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
+                output, # copied frame
+                " | ".join(label),
+                (x1, y1 - 8), # label appears 8 pixels above the bounding box
+                cv2.FONT_HERSHEY_SIMPLEX, # font style
+                0.5, # font scale
                 (0, 255, 0),
-                2,
+                2, # thickness (in pixels)
             )
 
         # ------------------------------------------------------------
