@@ -39,7 +39,7 @@ class Visualizer:
         self,
         frame: np.ndarray,
         tracks: list[Track],
-        speeds: dict[int, float],
+        # speeds: dict[int, float],
         *,
         fps: float | None = None,
         frame_number: int | None = None,
