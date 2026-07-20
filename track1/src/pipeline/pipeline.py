@@ -3,7 +3,7 @@
 # ============================================================================
 
 from __future__ import annotations
-import time # for measuring execution time
+import time  # for measuring execution time
 
 from src.core.logger import get_logger
 
@@ -12,6 +12,7 @@ from src.evaluation.evaluator import Evaluator
 from src.evaluation.metrics import Metrics
 
 logger = get_logger(__name__)
+
 
 class Pipeline:
     """
@@ -48,6 +49,7 @@ class Pipeline:
         visualizer,
         metrics: Metrics,
         evaluator: Evaluator,
+        post_processors: list | None = None,
     ) -> None:
 
         self.video_loader = video_loader
@@ -58,14 +60,20 @@ class Pipeline:
         self.visualizer = visualizer
         self.metrics = metrics
         self.evaluator = evaluator
-
+        self.post_processors = post_processors or []
     def run(self) -> BenchmarkSummary:
         logger.info("Pipeline started.")
         for frame_number, frame in self.video_loader:
-            
-            start_time = time.perf_counter() # time counted from a randome state
+
+            start_time = time.perf_counter()  # time counted from a randome state
             detections = self.detector.detect(frame)
             tracks = self.tracker.update(detections)
+            for processor in self.post_processors:
+                processor.process(
+                    frame=frame,
+                    frame_number=frame_number,
+                    tracks=tracks,
+                )
             # self.trajectory_manager.update(tracks)
             # speeds: list[float] = []
             # speed_map: dict[int, float] = {}
@@ -80,14 +88,14 @@ class Pipeline:
             fps = 1.0 / processing_time if processing_time > 0 else 0.0
 
             annotated_frame = self.visualizer.draw_tracks(
-                    frame=frame,
-                    tracks=tracks,
-                    # speeds=speed_map,
-                    fps=fps,
-                    frame_number=frame_number,
-                )
+                frame=frame,
+                tracks=tracks,
+                # speeds=speed_map,
+                fps=fps,
+                frame_number=frame_number,
+            )
 
-            if frame_number%500 == 0:
+            if frame_number % 500 == 0:
                 logger.info(f"{frame_number} Frames processed")
 
             # Visualization

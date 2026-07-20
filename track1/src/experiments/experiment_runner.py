@@ -25,16 +25,29 @@ from src.evaluation.benchmark_summary import BenchmarkSummary
 from src.evaluation.metrics import Metrics
 from src.evaluation.metrics_exporter import MetricsExporter
 from src.evaluation.evaluator import Evaluator
-
 from src.visualization.visualizer import Visualizer
 from src.pipeline import Pipeline
 from src.utils.file_utils import video_output_path, csv_output_path, json_output_path
 
+from integration.track1_adapter import Track1Adapter
+from integration.vehicle_database import VehicleDatabase
+from integration.reid_manager import ReIDManager
+from integration.reid_post_processor import ReIDPostProcessor
+from integration.reid_exporter import ReIDExporter
+from integration.gallery_exporter import GalleryExporter
+from track3.demo.predictor import VehicleReIDPredictor
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+checkpoint_path = PROJECT_ROOT / "track3" / "checkpoints" / "best_model.pth"
+
+
 class ExperimentRunner:
-    
+
     def __init__(self, config: Config) -> None:
         self.config = config
-    
+
     def run(self) -> BenchmarkSummary:
 
         # Input
@@ -42,13 +55,13 @@ class ExperimentRunner:
 
         # Detection
         algorithm = self.config["detection"]["algorithm"].strip().lower()
-        if algorithm == "ultralytics": # YOLO / RT-DETR
+        if algorithm == "ultralytics":  # YOLO / RT-DETR
             detector = UltralyticsDetector(self.config)
-        elif algorithm == "faster_rcnn": # Faster R-CNN
+        elif algorithm == "faster_rcnn":  # Faster R-CNN
             detector = FasterRCNNDetector(self.config)
         else:
             raise ValueError(f"Unsupported detector: {algorithm}")
-        
+
         # Tracking
         algorithm = self.config["tracking"]["algorithm"].strip().lower()
         if algorithm == "bytetrack":
@@ -62,7 +75,7 @@ class ExperimentRunner:
 
         # Trajectory
         # trajectory_manager = (TrajectoryManager())
-        
+
         # # Speed Estimator
         # algorithm = self.config["speed"]["algorithm"].strip().lower()
 
@@ -85,10 +98,10 @@ class ExperimentRunner:
         # Metrics
         metrics = Metrics()
         metrics_exporter = MetricsExporter()
-        
+
         # Evaluation
         evaluator = Evaluator()
-        
+
         # Benchmark Configuration
         benchmark_cfg = self.config["benchmark"]
         # benchmark_enabled = benchmark_cfg.get("enabled", False)
@@ -99,14 +112,34 @@ class ExperimentRunner:
         # if benchmark_enabled:
         visualizer = Visualizer(
             output_video=video_output_path(
-                benchmark_cfg["output_directory"], 
-                benchmark_type, 
-                experiment_name),
+                benchmark_cfg["output_directory"], benchmark_type, experiment_name
+            ),
             fps=video_loader.fps,
             frame_width=video_loader.width,
             frame_height=video_loader.height,
         )
+        # Re-ID
 
+        predictor = VehicleReIDPredictor(
+            checkpoint_path=str(checkpoint_path),
+        )
+
+        vehicle_database = VehicleDatabase()
+
+        track_adapter = Track1Adapter(
+            lost_threshold=30,
+        )
+
+        reid_manager = ReIDManager(
+            predictor=predictor,
+            database=vehicle_database,
+        )
+        reid_post_processor = ReIDPostProcessor(
+            adapter=track_adapter,
+            reid_manager=reid_manager,
+        )
+        reid_exporter = ReIDExporter()
+        gallery_exporter = GalleryExporter()
         # Pipeline
         pipeline = Pipeline(
             video_loader=video_loader,
@@ -117,20 +150,37 @@ class ExperimentRunner:
             metrics=metrics,
             evaluator=evaluator,
             visualizer=visualizer,
+            post_processors=[
+                reid_post_processor,
+            ],
         )
 
         try:
             summary = pipeline.run()
         finally:
-            video_loader.release() # runs even if pipeline fails
+            video_loader.release()  # runs even if pipeline fails
 
-        # Export 
+        output_path = (
+            Path(benchmark_cfg["output_directory"]) / "reid" / "reid_results.json"
+        )
+
+        reid_exporter.export(
+            results=reid_post_processor.results,
+            json_path=output_path,
+        )
+        gallery_exporter.export(
+            records=reid_post_processor.gallery_records,
+            output_directory=(
+                Path(benchmark_cfg["output_directory"]) / "reid" / "gallery"
+            ),
+        )
+        # Export
         # exporting results in only json format for now, cdsv can also be generated
         metrics_exporter.export(
-            summary, 
+            summary,
             # csv_path=csv_output_path(
-            #     benchmark_cfg["output_directory"], 
-            #     benchmark_type, 
+            #     benchmark_cfg["output_directory"],
+            #     benchmark_type,
             #     experiment_name,
             # ),
             json_path=json_output_path(

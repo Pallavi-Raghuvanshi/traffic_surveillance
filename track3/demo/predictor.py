@@ -110,3 +110,26 @@ class VehicleReIDPredictor:
 
             "inference_time": elapsed,
         }
+    @torch.inference_mode()
+    def embedding_from_crop(
+        self,
+        crop: np.ndarray,
+    ) -> np.ndarray:
+        """
+        Compute an embedding directly from an OpenCV crop.
+        """
+
+        image = Image.fromarray(crop[..., ::-1])  # BGR → RGB
+
+        tensor = test_transform(image)
+
+        tensor = tensor.unsqueeze(0).to(self.device)
+
+        embedding = self.model(tensor)
+
+        embedding = F.normalize(
+            embedding,
+            dim=1,
+        )
+
+        return embedding.squeeze(0).cpu().numpy()

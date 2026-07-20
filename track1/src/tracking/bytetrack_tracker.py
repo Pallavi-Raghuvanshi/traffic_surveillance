@@ -32,7 +32,15 @@ class ByteTrackTracker(BaseTracker):
     def update(self, detections: list[Detection]) -> list[Track]:
 
         if not detections:
-            self._active_tracks.clear()
+            empty_detections = sv.Detections(
+                xyxy=np.empty((0, 4), dtype=np.float32),
+                confidence=np.empty((0,), dtype=np.float32),
+                class_id=np.empty((0,), dtype=np.int32),
+            )
+
+            tracked = self._tracker.update_with_detections(empty_detections)
+
+            self._active_tracks = []
             return self._active_tracks
 
         class_lookup = {detection.class_id: detection.class_name for detection in detections}
