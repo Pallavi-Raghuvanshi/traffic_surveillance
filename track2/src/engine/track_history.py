@@ -198,17 +198,17 @@ class TrackHistoryManager:
     ) -> tuple[tuple[float, float], float, float | None]:
 
         if len(history) < 2:
-
             return (0.0, 0.0), 0.0, None
 
-        previous = history[-2]
-
         current = history[-1]
+
+        # Use up to the last 5 observations (~0.5 s at 10 FPS)
+        previous_index = max(0, len(history) - 5)
+        previous = history[previous_index]
 
         dt = current.timestamp - previous.timestamp
 
         if dt <= 0.0:
-
             return (0.0, 0.0), 0.0, None
 
         displacement = vector_between(
@@ -244,12 +244,18 @@ class TrackHistoryManager:
 
             return 0.0
 
-        previous_speed = self._previous_speed.get(
-            track_id,
-            speed,
-        )
+        previous_speed = self._previous_speed.get(track_id)
 
-        return (speed - previous_speed) / dt
+        if previous_speed is None:
+            return 0.0
+
+        acceleration = (speed - previous_speed) / dt
+
+        # Ignore tiny fluctuations caused by detector jitter
+        if abs(acceleration) < 5.0:
+            return 0.0
+
+        return acceleration
 
     def _update_stationary(
         self,

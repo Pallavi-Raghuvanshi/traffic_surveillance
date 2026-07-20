@@ -97,7 +97,13 @@ class NearCollisionDetector(BaseAnomalyDetector):
                 continue
 
             gap = bbox_gap_distance(track_a.bbox, track_b.bbox)
+            heading = self._heading_difference(
+                state_a.heading,
+                state_b.heading,
+            )
 
+            if heading < 45:
+                continue
             if gap > self._proximity_distance_px:
 
                 self._reported.discard(pair_key)
@@ -151,7 +157,18 @@ class NearCollisionDetector(BaseAnomalyDetector):
     # ------------------------------------------------------------------ #
     # Helpers
     # ------------------------------------------------------------------ #
+    @staticmethod
+    def _heading_difference(
+        heading_a: float | None,
+        heading_b: float | None,
+    ) -> float:
 
+        if heading_a is None or heading_b is None:
+            return 180.0
+
+        diff = abs(heading_a - heading_b)
+
+        return min(diff, 360 - diff)
     def _time_to_collision(
         self,
         state_a: MotionState,

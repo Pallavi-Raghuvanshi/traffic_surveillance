@@ -60,7 +60,7 @@ flow_model:
 
   # Size, in pixels, of each grid cell used to learn local dominant
   # flow direction. No lane geometry is defined manually.
-  cell_size_px: 120
+  cell_size_px: 80
 
   # Exponential-moving-average weight applied to each new observation.
   ema_alpha: 0.05
@@ -113,8 +113,8 @@ anomaly:
   dedup_cooldown_seconds: 3.0
 
   collision:
-
-    iou_threshold: 0.30
+    iou_threshold: 0.45
+    # iou_threshold: 0.30
 
     pre_impact_min_speed: 25.0
 
@@ -124,31 +124,34 @@ anomaly:
 
   near_collision:
 
-    proximity_distance_px: 40.0
+    # proximity_distance_px: 40.0
 
-    ttc_threshold_seconds: 1.5
+    # ttc_threshold_seconds: 1.5
 
-    closing_speed_threshold: 10.0
-
+    # closing_speed_threshold: 10.0
+    proximity_distance_px: 20
+    ttc_threshold_seconds: 0.8
+    closing_speed_threshold: 20
     min_speed: 10.0
 
   stalled_vehicle:
 
     movement_radius_px: 15.0
-
-    stall_duration_seconds: 8.0
+    stall_duration_seconds: 30
+    # stall_duration_seconds: 8.0
 
   sudden_stop:
+    speed_drop_ratio: 0.8
+    min_pre_stop_speed: 50
+    # min_pre_stop_speed: 30.0
 
-    min_pre_stop_speed: 30.0
-
-    speed_drop_ratio: 0.6
+    # speed_drop_ratio: 0.6
 
     window_seconds: 1.0
 
   abnormal_trajectory:
-
-    heading_variance_threshold: 0.5
+    heading_variance_threshold: 0.8
+    # heading_variance_threshold: 0.5
 
     min_history_seconds: 1.5
 

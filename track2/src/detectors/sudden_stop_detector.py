@@ -61,12 +61,20 @@ class SuddenStopDetector(BaseAnomalyDetector):
 
                 continue
 
+            # state = context.motion_states.get(track.track_id)
+
+            # if state is None:
+            
+                # continue
             state = context.motion_states.get(track.track_id)
 
             if state is None:
-
                 continue
 
+            # Vehicle must actually be decelerating
+            if state.acceleration >= -10.0:
+                self._reported.discard(track.track_id)
+                continue
             peak_speed = context.history.max_speed(
                 track.track_id,
                 self._window_seconds,
@@ -78,10 +86,19 @@ class SuddenStopDetector(BaseAnomalyDetector):
 
                 continue
 
-            dropped = state.speed <= peak_speed * (
-                1.0 - self._speed_drop_ratio
-            )
+            # dropped = state.speed <= peak_speed * (
+            #     1.0 - self._speed_drop_ratio
+            # )
+            dropped = (
 
+                state.speed <= peak_speed * (
+                    1.0 - self._speed_drop_ratio
+                )
+
+                and
+
+                state.speed <= self._min_pre_stop_speed * 0.5
+            )
             if not dropped:
 
                 if state.speed >= peak_speed * 0.8:

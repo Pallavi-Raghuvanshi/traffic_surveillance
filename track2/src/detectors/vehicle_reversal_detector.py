@@ -43,8 +43,12 @@ class VehicleReversalDetector(BaseAnomalyDetector):
         self._long_window_seconds = cfg["long_window_seconds"]
 
         self._min_speed = cfg["min_speed"]
+        self._violation_since: dict[int, float] = {}
 
         self._reported: set[int] = set()
+
+        self._confirmation_seconds = 1.0
+        # self._reported: set[int] = set()
 
     @property
     def anomaly_type(
@@ -97,9 +101,35 @@ class VehicleReversalDetector(BaseAnomalyDetector):
                 baseline_heading,
             )
 
+            # if deviation < self._angle_threshold:
+
+            #     self._reported.discard(track.track_id)
+
+            #     continue
+
+            # if track.track_id in self._reported:
+
+            #     continue
+
+            # self._reported.add(track.track_id)
+
+            # events.append(
             if deviation < self._angle_threshold:
 
+                self._violation_since.pop(track.track_id, None)
+
                 self._reported.discard(track.track_id)
+
+                continue
+
+            since = self._violation_since.setdefault(
+                track.track_id,
+                context.timestamp,
+            )
+
+            duration = context.timestamp - since
+
+            if duration < self._confirmation_seconds:
 
                 continue
 
@@ -110,7 +140,6 @@ class VehicleReversalDetector(BaseAnomalyDetector):
             self._reported.add(track.track_id)
 
             events.append(
-
                 AnomalyEvent(
 
                     anomaly_type=self.anomaly_type,
@@ -198,5 +227,7 @@ class VehicleReversalDetector(BaseAnomalyDetector):
     def reset(
         self,
     ) -> None:
+        self._violation_since.clear()
 
         self._reported.clear()
+        # self._reported.clear()
