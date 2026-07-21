@@ -35,8 +35,8 @@ models/*.pth
 models/*.onnx
 
 # Outputs
-outputs/
-
+track2/outputs
+track1/outputs/detector_benchmark
 # Jupyter
 .ipynb_checkpoints/
 
