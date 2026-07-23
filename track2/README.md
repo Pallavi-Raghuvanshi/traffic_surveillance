@@ -1,4 +1,3 @@
-
 # 🚨 Traffic Surveillance System – Track 2 (Traffic Anomaly Detection)
 
 > **A Modular, Detector/Tracker-Independent Anomaly Detection Engine — inspired by AI City Challenge 2018 Track 2**
@@ -76,15 +75,15 @@ Because the boundary is a file, Component 2 never imports a line of Track 1's co
 
 All seven are inferred purely from bounding-box geometry and motion history — no homography, lane annotations, parking zones, traffic-light state, HD maps, GPS, or calibration.
 
-| # | Anomaly | Signal |
-| - | ------- | ------ |
-| 1 | **Vehicle Collision** | Two boxes' IoU spikes above threshold while at least one track shows a sharp pre-impact deceleration. |
-| 2 | **Near Collision** | Estimated time-to-collision (closing speed vs. gap distance) drops below threshold without an actual impact. |
-| 3 | **Stalled Vehicle** | Track stays within a small radius (speed below the stationary threshold) for an abnormally long duration. |
-| 4 | **Sudden Stop** | Track's speed drops sharply relative to its own recent peak within a short window — a braking event. |
-| 5 | **Abnormal Trajectory** | High circular variance of recent headings — zig-zag / erratic motion. |
-| 6 | **Wrong-Way Driving** | Track moves opposite to the **dominant flow direction learned automatically** from a grid of historical trajectory vectors — no manually defined lanes. |
-| 7 | **Vehicle Reversal** | Track's recent heading deviates ~180° from its own earlier heading (self-referential, unlike wrong-way). |
+| # | Anomaly                       | Signal                                                                                                                                                        |
+| - | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | **Vehicle Collision**   | Two boxes' IoU spikes above threshold while at least one track shows a sharp pre-impact deceleration.                                                         |
+| 2 | **Near Collision**      | Estimated time-to-collision (closing speed vs. gap distance) drops below threshold without an actual impact.                                                  |
+| 3 | **Stalled Vehicle**     | Track stays within a small radius (speed below the stationary threshold) for an abnormally long duration.                                                     |
+| 4 | **Sudden Stop**         | Track's speed drops sharply relative to its own recent peak within a short window — a braking event.                                                         |
+| 5 | **Abnormal Trajectory** | High circular variance of recent headings — zig-zag / erratic motion.                                                                                        |
+| 6 | **Wrong-Way Driving**   | Track moves opposite to the**dominant flow direction learned automatically** from a grid of historical trajectory vectors — no manually defined lanes. |
+| 7 | **Vehicle Reversal**    | Track's recent heading deviates ~180° from its own earlier heading (self-referential, unlike wrong-way).                                                     |
 
 Every detector implements `BaseAnomalyDetector` and self-registers with `AnomalyDetectorFactory`; `AnomalyEngine` invokes whichever set is listed in `config.yaml`, aggregates results, and deduplicates ongoing events via a cooldown window. No detector is aware of any other detector.
 
@@ -94,16 +93,16 @@ Every detector implements `BaseAnomalyDetector` and self-registers with `Anomaly
 
 These require information this project deliberately does not assume is available. They are documented here so the roadmap is explicit once that data exists.
 
-| Anomaly | Requires | Status |
-| ------- | -------- | ------ |
-| Illegal Parking | Lane / parking-zone annotations | Not implemented |
-| Overspeeding | Homography calibration (real-world speed, not pixel motion) | Not implemented — Component 1's `HomographySpeedEstimator` would supply this |
-| Lane Violation | Lane geometry annotations | Not implemented |
-| Stop-Line Violation | Stop-line / intersection annotations | Not implemented |
-| Restricted Zone Intrusion | Zone polygon definitions | Not implemented |
-| Red-Light Violation | Traffic signal state feed | Not implemented |
-| Traffic Congestion | Calibrated road-segment density / area | Not implemented |
-| Tailgating | Calibrated real-world following distance | Not implemented |
+| Anomaly                   | Requires                                                    | Status                                                                         |
+| ------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Illegal Parking           | Lane / parking-zone annotations                             | Not implemented                                                                |
+| Overspeeding              | Homography calibration (real-world speed, not pixel motion) | Not implemented — Component 1's`HomographySpeedEstimator` would supply this |
+| Lane Violation            | Lane geometry annotations                                   | Not implemented                                                                |
+| Stop-Line Violation       | Stop-line / intersection annotations                        | Not implemented                                                                |
+| Restricted Zone Intrusion | Zone polygon definitions                                    | Not implemented                                                                |
+| Red-Light Violation       | Traffic signal state feed                                   | Not implemented                                                                |
+| Traffic Congestion        | Calibrated road-segment density / area                      | Not implemented                                                                |
+| Tailgating                | Calibrated real-world following distance                    | Not implemented                                                                |
 
 ---
 
@@ -150,10 +149,10 @@ Outputs land in `outputs/anomaly_runs/<experiment>/`: `anomalies.csv` / `anomali
 
 ## 🔬 Extending the Framework
 
-| Add a... | Steps |
-| -------- | ----- |
-| Anomaly Detector | Subclass `BaseAnomalyDetector` in `src/detectors/`, decorate with `@AnomalyDetectorFactory.register("name")`, import it in `detectors/__init__.py`, add its name to `config.yaml`. |
-| Track Source | Subclass `BaseTrackSource` in `src/input/` (e.g. a live streaming feed). |
+| Add a...         | Steps                                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Anomaly Detector | Subclass`BaseAnomalyDetector` in `src/detectors/`, decorate with `@AnomalyDetectorFactory.register("name")`, import it in `detectors/__init__.py`, add its name to `config.yaml`. |
+| Track Source     | Subclass`BaseTrackSource` in `src/input/` (e.g. a live streaming feed).                                                                                                                 |
 
 No changes to `AnomalyEngine` or `Pipeline` are required.
 

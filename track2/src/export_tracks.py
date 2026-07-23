@@ -26,20 +26,15 @@ import time
 from pathlib import Path
 
 
-def _add_track1_to_path(
-    track1_root: Path,
-) -> None:
+def _add_track1_to_path(track1_root: Path) -> None:
 
-    track1_src = track1_root / "src"
-
-    if not track1_src.exists():
-
+    if not track1_root.exists():
         raise FileNotFoundError(
-            f"Track 1 src directory not found: {track1_src}"
+            f"Track 1 directory not found: {track1_root}"
         )
 
-    sys.path.insert(0, str(track1_src))
-
+    # Add the Track 1 package root
+    sys.path.insert(0, str(track1_root))
 
 def export_tracks(
     *,
@@ -59,10 +54,10 @@ def export_tracks(
 
     _add_track1_to_path(track1_root)
 
-    from core.config import Config as Track1Config
-    from detection.ultralytics_detector import UltralyticsDetector
-    from input.video_loader import VideoLoader
-    from tracking.botsort_tracker import BoTSORTTracker
+    from src.core.config import Config as Track1Config
+    from src.detection.ultralytics_detector import UltralyticsDetector
+    from src.input.video_loader import VideoLoader
+    from src.tracking.botsort_tracker import BoTSORTTracker
 
     config = Track1Config()
 
@@ -105,32 +100,19 @@ def export_tracks(
             tracks = tracker.update(detections, frame)
 
             record = {
-
                 "frame_number": frame_number,
-
                 "timestamp": (frame_number - 1) / video_loader.fps,
-
                 "tracks": [
-
                     {
-
                         "track_id": track.track_id,
-
                         "x1": track.bbox.x1,
-
                         "y1": track.bbox.y1,
-
                         "x2": track.bbox.x2,
-
                         "y2": track.bbox.y2,
-
                         "confidence": track.confidence,
-
                         "class_id": track.class_id,
-
                         "class_name": track.class_name,
                     }
-
                     for track in tracks
                 ],
             }
@@ -141,16 +123,13 @@ def export_tracks(
 
             if frame_count % 200 == 0:
 
-                print(
-                    f"  ... exported {frame_count} frames"
-                )
+                print(f"  ... exported {frame_count} frames")
 
     video_loader.release()
 
     elapsed = time.perf_counter() - start_time
 
     print(
-
         f"Exported {frame_count} frames "
         f"({frame_count / elapsed:.2f} fps) to {output_path}"
     )
@@ -159,6 +138,7 @@ def export_tracks(
 # ============================================================================
 # CLI
 # ============================================================================
+
 
 def _resolve_model_path(
     track1_root: Path,
@@ -176,22 +156,15 @@ def _resolve_model_path(
 
 def main() -> None:
 
-    default_track1_root = (
-        Path(__file__).resolve().parents[2] / "track1"
-    )
+    default_track1_root = Path(__file__).resolve().parents[2] / "track1"
 
     default_output = (
-        Path(__file__).resolve().parents[1]
-        / "data"
-        / "tracks"
-        / "sample.jsonl"
+        Path(__file__).resolve().parents[1] / "data" / "tracks" / "sample.jsonl"
     )
 
     parser = argparse.ArgumentParser(
-
         description=(
-            "Export Track 1 detector + tracker output to a Track 2 "
-            "JSONL track feed."
+            "Export Track 1 detector + tracker output to a Track 2 " "JSONL track feed."
         ),
     )
 
@@ -249,31 +222,21 @@ def main() -> None:
 
     else:
 
-        video_path = (
-            track1_root / "data" / "raw" / "sample.avi"
-        ).resolve()
+        video_path = (track1_root / "data" / "raw" / "sample.avi").resolve()
 
     output_path = Path(args.output).resolve()
 
     export_tracks(
-
         track1_root=track1_root,
-
         video_path=video_path,
-
         output_path=output_path,
-
         detection_model=_resolve_model_path(
             track1_root,
             args.model,
         ),
-
         confidence=args.confidence,
-
         iou=args.iou,
-
         device=args.device,
-
         classes=args.classes,
     )
 

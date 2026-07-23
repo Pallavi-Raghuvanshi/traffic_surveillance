@@ -7,7 +7,7 @@ project:
 
 # Paths
 paths:
-  video: "data/raw/sample.avi"
+  video: "data/sample.avi"
   output_video: "outputs/video.mp4"
   model_dir: "models"
   homography: "data/calibration/homography.npy"

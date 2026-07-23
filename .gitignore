@@ -28,12 +28,12 @@ logs/
 **/data/interim/
 **/data/processed/
 **/data/tracks/
-
+datasets
 # Model weights
 models/*.pt
 models/*.pth
 models/*.onnx
-
+track1/models
 # Outputs
 track2/outputs
 track1/outputs/detector_benchmark
